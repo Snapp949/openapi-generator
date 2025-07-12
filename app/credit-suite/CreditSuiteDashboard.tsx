@@ -371,3 +371,4 @@ const CreditSuiteDashboard: React.FC = () => {
 }
 
 export default CreditSuiteDashboard
+export { CreditSuiteDashboard }
