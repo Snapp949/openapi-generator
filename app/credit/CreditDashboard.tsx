@@ -1,8 +1,10 @@
 "use client"
 
+import { CardDescription } from "@/components/ui/card"
+
 import { useState } from "react"
 import { useCreditSuite } from "@/contexts/credit-context"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -19,6 +21,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
 import {
   TrendingUp,
   TrendingDown,
@@ -36,7 +39,29 @@ import {
   Zap,
 } from "lucide-react"
 
-export function CreditDashboard() {
+export interface CreditProfile {
+  ficoScore: number
+  vantageScore: number
+  creditUtilization: number
+  paymentHistory: number
+  accounts: {
+    total: number
+    open: number
+    closed: number
+  }
+  inquiries: number
+  negativeMarks: number
+  creditLimit: number
+  balance: number
+}
+
+interface CreditDashboardProps {
+  profile: CreditProfile
+  lastUpdated: string
+  userId: string
+}
+
+export default function CreditDashboard({ profile, lastUpdated, userId }: CreditDashboardProps) {
   const {
     creditProfile,
     creditHistory,
@@ -106,6 +131,18 @@ export function CreditDashboard() {
       setNewGoalDate("")
     }
   }
+
+  const {
+    ficoScore,
+    vantageScore,
+    creditUtilization,
+    paymentHistory,
+    accounts,
+    inquiries,
+    negativeMarks,
+    creditLimit,
+    balance,
+  } = profile
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -206,6 +243,40 @@ export function CreditDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Credit Overview – User */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold">Credit Overview – User {userId}</CardTitle>
+          <p className="text-sm text-muted-foreground">Last updated: {new Date(lastUpdated).toLocaleString()}</p>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <Stat label="FICO Score" value={ficoScore} />
+          <Stat label="Vantage Score" value={vantageScore} />
+          <Stat label="Utilization" value={`${creditUtilization}%`} />
+          <Stat label="Payment History" value={`${paymentHistory}%`} />
+          <Stat label="Accounts" value={`${accounts.open} open / ${accounts.closed} closed`} />
+          <Stat label="Inquiries (2 yrs)" value={inquiries} />
+          <Stat label="Negative Marks" value={negativeMarks} />
+          <Stat label="Limits / Balance" value={`$${creditLimit.toLocaleString()} / $${balance.toLocaleString()}`} />
+        </CardContent>
+      </Card>
+
+      {/* Utilization Breakdown */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold">Utilization Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Balance</span>
+            <span className="font-medium">
+              ${balance.toLocaleString()} / ${creditLimit.toLocaleString()}
+            </span>
+          </div>
+          <Progress value={creditUtilization} />
+        </CardContent>
+      </Card>
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="overview" className="space-y-6">
@@ -665,6 +736,16 @@ export function CreditDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+function Stat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div>
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="text-lg font-medium">{value}</p>
+      <Separator className="my-2" />
     </div>
   )
 }
