@@ -13,13 +13,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Crown, User, Building2, ChevronDown, Shield, Zap, Globe } from "lucide-react"
+import { Crown, User, Building2, Landmark, Shield, ChevronDown, Zap, Globe } from "lucide-react"
 import { cn } from "@/lib/utils"
+import type { LucideIcon } from "lucide-react"
+import type { PortalType } from "@/types/portal" // Declare PortalType here
 
-const portalIcons = {
+const portalIcons: Record<PortalType, LucideIcon> = {
   imperial: Crown,
   citizen: User,
   vendor: Building2,
+  institutional: Landmark,
+  admin: Shield,
 }
 
 export function PortalSwitcher() {
@@ -29,6 +33,11 @@ export function PortalSwitcher() {
 
   const allowedPortals = getUserPortalAccess()
   const CurrentIcon = portalIcons[currentPortal]
+
+  // Fallback: if a portal lacks an icon, avoid rendering undefined
+  if (!CurrentIcon) {
+    return null
+  }
 
   const handlePortalSwitch = async (portal: typeof currentPortal) => {
     if (portal === currentPortal) return
@@ -75,7 +84,7 @@ export function PortalSwitcher() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
           {allowedPortals.map((portalKey) => {
             const portal = portalConfig[portalKey]
-            const Icon = portalIcons[portalKey]
+            const Icon = portalIcons[portalKey] ?? Globe
             const isActive = currentPortal === portalKey
             const isImperial = portalKey === "imperial"
             const isCitizen = portalKey === "citizen"
