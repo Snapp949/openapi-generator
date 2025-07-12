@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { GlobalUnlockProvider } from "@/contexts/global-unlock-context"
+import { PortalProvider } from "@/contexts/portal-context"
 import { EnvironmentSidebar } from "@/components/sidebar/environment-sidebar"
 import { CursorOrb } from "@/components/ui/cursor-orb"
 import { ConversationalGeniusOrb } from "@/components/genius-guide-orb/conversational-genius-orb"
@@ -26,19 +27,21 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <GlobalUnlockProvider>
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-              {/* Environment Sidebar */}
-              <EnvironmentSidebar />
+          <PortalProvider>
+            <GlobalUnlockProvider>
+              <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+                {/* Environment Sidebar */}
+                <EnvironmentSidebar />
 
-              {/* Main Content */}
-              <div className="ml-16 min-h-screen">{children}</div>
+                {/* Main Content */}
+                <div className="ml-16 min-h-screen">{children}</div>
 
-              {/* Global UI Elements */}
-              <CursorOrb />
-              <ConversationalGeniusOrb />
-            </div>
-          </GlobalUnlockProvider>
+                {/* Global UI Elements */}
+                <CursorOrb />
+                <ConversationalGeniusOrb />
+              </div>
+            </GlobalUnlockProvider>
+          </PortalProvider>
         </ThemeProvider>
       </body>
     </html>
