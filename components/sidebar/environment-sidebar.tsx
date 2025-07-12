@@ -1,281 +1,420 @@
 "use client"
 
-import * as React from "react"
-import { useRouter, usePathname } from "next/navigation"
-import { AnimatePresence, motion } from "framer-motion"
-import { usePortal } from "@/contexts/portal-context"
-import { cn } from "@/lib/utils"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+import { Input } from "@/components/ui/input"
 import {
+  Search,
   Home,
-  TrendingUp,
-  Building2,
-  Users,
-  Settings,
-  CreditCard,
-  PieChart,
   BarChart3,
-  Shield,
+  ShoppingCart,
   Briefcase,
   Crown,
-  Activity,
-  MapPin,
-  Landmark,
-  Monitor,
-  Coins,
+  Shield,
   Brain,
+  Sparkles,
+  Settings,
+  User,
+  HelpCircle,
+  ChevronRight,
+  Zap,
+  Star,
+  Clock,
+  TrendingUp,
+  Users,
+  X,
 } from "lucide-react"
+import Link from "next/link"
+import { QuantumProfileCard } from "@/components/ui/quantum-profile-card"
+import { PortalSwitcher } from "@/components/ui/portal-switcher"
 
-const navigationSections = {
-  imperial: [
-    {
-      title: "Command Center",
-      items: [
-        { name: "Imperial Dashboard", path: "/imperial/command", icon: Crown, badge: "ADMIN" },
-        { name: "System Control", path: "/imperial/system", icon: Settings, badge: "CRITICAL" },
-        { name: "User Management", path: "/imperial/users", icon: Users, badge: "ACTIVE" },
-        { name: "Platform Analytics", path: "/imperial/analytics", icon: BarChart3 },
-        { name: "AI Command Center", path: "/imperial/ai-control", icon: Brain, badge: "NEURAL" },
-      ],
-    },
-  ],
-  citizen: [
-    {
-      title: "Financial Hub",
-      items: [
-        { name: "Dashboard", path: "/citizen/dashboard", icon: Home, badge: "HOME" },
-        { name: "Investment Portfolio", path: "/investors/portal", icon: TrendingUp, badge: "ACTIVE" },
-        { name: "Loan Center", path: "/citizen/loan-center", icon: Building2, badge: "NEW" },
-        { name: "Credit Suite", path: "/credit", icon: CreditCard },
-        { name: "Real Estate", path: "/real-estate", icon: MapPin },
-        { name: "Business Suite", path: "/business-suite", icon: Briefcase, badge: "PRO" },
-      ],
-    },
-    {
-      title: "Digital Assets",
-      items: [
-        { name: "SnapDAX Exchange", path: "/snap-dax/digital-asset-exchange", icon: Coins, badge: "LIVE" },
-        { name: "Asset Portfolio", path: "/snap-dax/portfolio", icon: PieChart },
-      ],
-    },
-  ],
-  vendor: [
-    {
-      title: "Business Hub",
-      items: [
-        { name: "Vendor Dashboard", path: "/vendor/dashboard", icon: Building2, badge: "BUSINESS" },
-        { name: "Partnership Portal", path: "/vendor/partnerships", icon: Users },
-        { name: "Revenue Analytics", path: "/vendor/revenue", icon: TrendingUp },
-      ],
-    },
-  ],
-  institutional: [
-    {
-      title: "Portfolio Management",
-      items: [
-        { name: "Institutional Dashboard", path: "/institutional/dashboard", icon: Landmark, badge: "PREMIUM" },
-        { name: "Large Cap Investments", path: "/institutional/large-cap", icon: TrendingUp, badge: "HIGH VOLUME" },
-        { name: "Fund Management", path: "/institutional/funds", icon: PieChart },
-        { name: "Risk Analytics", path: "/institutional/risk", icon: Shield },
-      ],
-    },
-  ],
-  admin: [
-    {
-      title: "Platform Administration",
-      items: [
-        { name: "Admin Dashboard", path: "/admin/dashboard", icon: Monitor, badge: "SNAPPAIFI" },
-        { name: "System Status", path: "/admin/system", icon: Activity, badge: "LIVE" },
-        { name: "User Management", path: "/admin/users", icon: Users },
-        { name: "Platform Settings", path: "/admin/settings", icon: Settings },
-      ],
-    },
-  ],
+interface Environment {
+  id: string
+  name: string
+  description: string
+  category: string
+  status: "active" | "beta" | "coming-soon"
+  users: number
+  growth: number
+  icon: any
+  href: string
+  features: string[]
+  isBookmarked?: boolean
+  lastAccessed?: string
 }
 
-export function EnvironmentSidebar({ className }: { className?: string }) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const { currentPortal, portalConfig, getUserPortalAccess, switchPortal } = usePortal()
-  const [isExpanded, setIsExpanded] = React.useState(false)
+const environments: Environment[] = [
+  {
+    id: "imperial-command",
+    name: "Imperial Command",
+    description: "Executive control center",
+    category: "command",
+    status: "active",
+    users: 1247,
+    growth: 23.5,
+    icon: Crown,
+    href: "/imperial/command",
+    features: ["Admin Dashboard", "User Management", "System Control"],
+    lastAccessed: "2 hours ago",
+  },
+  {
+    id: "citizen-dashboard",
+    name: "Citizen Dashboard",
+    description: "Personal financial hub",
+    category: "financial",
+    status: "active",
+    users: 15420,
+    growth: 18.2,
+    icon: Shield,
+    href: "/citizen/dashboard",
+    features: ["Personal Finance", "Credit Monitoring", "Loan Center"],
+    isBookmarked: true,
+    lastAccessed: "5 minutes ago",
+  },
+  {
+    id: "business-suite",
+    name: "Business Suite",
+    description: "Business management platform",
+    category: "business",
+    status: "active",
+    users: 8934,
+    growth: 31.7,
+    icon: Briefcase,
+    href: "/business-suite",
+    features: ["Business Analytics", "Team Management", "Revenue Optimization"],
+    lastAccessed: "1 hour ago",
+  },
+  {
+    id: "real-estate",
+    name: "Real Estate Hub",
+    description: "Property investment platform",
+    category: "commerce",
+    status: "active",
+    users: 5672,
+    growth: 42.1,
+    icon: Home,
+    href: "/real-estate",
+    features: ["Property Search", "Investment Analysis", "Market Insights"],
+    isBookmarked: true,
+    lastAccessed: "30 minutes ago",
+  },
+  {
+    id: "snap-dax",
+    name: "SnapDAX Exchange",
+    description: "Digital asset trading",
+    category: "financial",
+    status: "active",
+    users: 12890,
+    growth: 67.3,
+    icon: BarChart3,
+    href: "/snap-dax/digital-asset-exchange",
+    features: ["Trading Platform", "Portfolio Analytics", "Market Data"],
+    lastAccessed: "15 minutes ago",
+  },
+  {
+    id: "ecommerex",
+    name: "EcommerEX",
+    description: "E-commerce solutions",
+    category: "commerce",
+    status: "active",
+    users: 23456,
+    growth: 28.9,
+    icon: ShoppingCart,
+    href: "/commerce/marketplace",
+    features: ["Product Catalog", "Order Management", "Analytics"],
+    lastAccessed: "45 minutes ago",
+  },
+  {
+    id: "credit-suite",
+    name: "Credit Suite",
+    description: "AI credit optimization",
+    category: "financial",
+    status: "active",
+    users: 18734,
+    growth: 45.6,
+    icon: Brain,
+    href: "/credit-suite",
+    features: ["Credit Monitoring", "Score Optimization", "Dispute Management"],
+    isBookmarked: true,
+    lastAccessed: "10 minutes ago",
+  },
+  {
+    id: "beta-lab",
+    name: "Beta Laboratory",
+    description: "Experimental features",
+    category: "innovation",
+    status: "beta",
+    users: 892,
+    growth: 156.7,
+    icon: Sparkles,
+    href: "/beta-lab",
+    features: ["Quantum Features", "Neural Networks", "AI Experiments"],
+    lastAccessed: "3 hours ago",
+  },
+]
 
-  const currentSections = navigationSections[currentPortal] || []
-  const currentPortalConfig = portalConfig[currentPortal]
-  const availablePortals = getUserPortalAccess()
+export function EnvironmentSidebar() {
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedFilter, setSelectedFilter] = useState<"all" | "bookmarked" | "recent">("all")
+  const [filteredEnvironments, setFilteredEnvironments] = useState(environments)
 
-  const handleProfileSwitch = async (portal: string) => {
-    const success = await switchPortal(portal as any)
-    if (success) {
-      const newPath =
-        {
-          imperial: "/imperial/command",
-          citizen: "/citizen/dashboard",
-          vendor: "/vendor/dashboard",
-          institutional: "/institutional/dashboard",
-          admin: "/admin/dashboard",
-        }[portal] || "/dashboard/home"
-      router.push(newPath)
+  // Filter environments based on search and filter
+  useEffect(() => {
+    let filtered = environments
+
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (env) =>
+          env.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          env.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          env.features.some((feature) => feature.toLowerCase().includes(searchQuery.toLowerCase())),
+      )
+    }
+
+    // Apply category filter
+    switch (selectedFilter) {
+      case "bookmarked":
+        filtered = filtered.filter((env) => env.isBookmarked)
+        break
+      case "recent":
+        filtered = filtered
+          .sort((a, b) => {
+            const aTime = a.lastAccessed || "never"
+            const bTime = b.lastAccessed || "never"
+            if (aTime === "never") return 1
+            if (bTime === "never") return -1
+            return 0 // Simple sort for demo
+          })
+          .slice(0, 5)
+        break
+    }
+
+    setFilteredEnvironments(filtered)
+  }, [searchQuery, selectedFilter])
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active":
+        return "bg-green-500"
+      case "beta":
+        return "bg-yellow-500"
+      case "coming-soon":
+        return "bg-gray-500"
+      default:
+        return "bg-blue-500"
     }
   }
 
+  const clearSearch = () => {
+    setSearchQuery("")
+  }
+
   return (
-    <motion.div
+    <div
+      className={`
+        fixed left-0 top-0 h-full bg-gradient-to-b from-slate-900/95 to-purple-900/95 
+        backdrop-blur-xl border-r border-white/10 transition-all duration-300 z-50
+        ${isExpanded ? "w-80" : "w-16"}
+      `}
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
-      className={cn("fixed left-0 top-0 h-full z-50 flex transition-width duration-300 ease-in-out", className)}
-      animate={{ width: isExpanded ? "20rem" : "5rem" }}
     >
-      <div
-        className={`h-full w-full bg-gradient-to-b ${currentPortalConfig.color} backdrop-blur-2xl border-r border-white/10 shadow-2xl`}
-      >
-        <div className="h-full flex flex-col p-3 overflow-y-auto overflow-x-hidden">
-          {/* Portal Header */}
-          <div className="flex items-center gap-3 mb-4 p-2">
-            <div className="text-2xl text-white">{currentPortalConfig.icon}</div>
-            <AnimatePresence>
-              {isExpanded && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex-1 overflow-hidden"
-                >
-                  <h2 className="text-white font-bold text-lg truncate">{currentPortalConfig.name}</h2>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Profile Switcher */}
-          <AnimatePresence>
+      <div className="flex flex-col h-full">
+        {/* Header */}
+        <div className="p-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-600">
+              <Zap className="h-5 w-5 text-white" />
+            </div>
             {isExpanded && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mb-4 overflow-hidden"
-              >
-                <div className="bg-black/20 rounded-lg p-3">
-                  <h3 className="text-white/90 font-medium text-sm mb-2">Switch Profile</h3>
-                  <div className="space-y-1">
-                    {availablePortals.map((portal) => {
-                      const config = portalConfig[portal]
-                      const isActive = portal === currentPortal
-                      return (
-                        <Button
-                          key={portal}
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleProfileSwitch(portal)}
-                          disabled={isActive}
-                          className={cn(
-                            "w-full justify-start text-white/80 hover:bg-white/10 transition-colors",
-                            isActive && "bg-white/20 text-white",
-                          )}
-                        >
-                          <span className="text-lg mr-2">{config.icon}</span>
-                          <span className="font-medium text-sm">{config.name}</span>
-                        </Button>
-                      )
-                    })}
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <Separator className="bg-white/20 my-2" />
-
-          {/* Navigation */}
-          <div className="flex-1 space-y-4">
-            {currentSections.map((section) => (
-              <div key={section.title}>
-                <AnimatePresence>
-                  {isExpanded && (
-                    <motion.h3
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      className="text-white/70 font-medium text-xs uppercase tracking-wider px-2 mb-2"
-                    >
-                      {section.title}
-                    </motion.h3>
-                  )}
-                </AnimatePresence>
-                <div className="space-y-1">
-                  {section.items.map((item) => {
-                    const isActive = pathname === item.path
-                    return (
-                      <Button
-                        key={item.name}
-                        variant="ghost"
-                        onClick={() => router.push(item.path)}
-                        className={cn(
-                          "w-full transition-all duration-200 group",
-                          isExpanded ? "justify-start pl-2" : "justify-center",
-                          isActive
-                            ? "bg-white/20 text-white shadow-lg"
-                            : "text-white/80 hover:bg-white/10 hover:text-white",
-                        )}
-                        title={isExpanded ? "" : item.name}
-                      >
-                        <item.icon className="w-5 h-5 shrink-0" />
-                        <AnimatePresence>
-                          {isExpanded && (
-                            <motion.span
-                              initial={{ opacity: 0, width: 0, marginLeft: 0 }}
-                              animate={{ opacity: 1, width: "auto", marginLeft: "0.75rem" }}
-                              exit={{ opacity: 0, width: 0, marginLeft: 0 }}
-                              className="flex-1 text-left truncate"
-                            >
-                              {item.name}
-                            </motion.span>
-                          )}
-                        </AnimatePresence>
-                        {isExpanded && item.badge && (
-                          <Badge variant="secondary" className="text-xs bg-white/20 text-white border-white/30">
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </Button>
-                    )
-                  })}
-                </div>
+              <div className="flex-1">
+                <h2 className="font-bold text-lg bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  SnapAiFi
+                </h2>
+                <p className="text-xs text-muted-foreground">Nexus Portal</p>
               </div>
+            )}
+          </div>
+        </div>
+
+        {/* Search */}
+        {isExpanded && (
+          <div className="p-4 space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search environments..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-8 bg-white/10 border-white/20 text-sm"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearSearch}
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+
+            {/* Quick Filters */}
+            <div className="flex gap-1">
+              <Button
+                variant={selectedFilter === "all" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setSelectedFilter("all")}
+                className="text-xs h-7"
+              >
+                All
+              </Button>
+              <Button
+                variant={selectedFilter === "bookmarked" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setSelectedFilter("bookmarked")}
+                className="text-xs h-7"
+              >
+                <Star className="h-3 w-3 mr-1" />
+                Starred
+              </Button>
+              <Button
+                variant={selectedFilter === "recent" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setSelectedFilter("recent")}
+                className="text-xs h-7"
+              >
+                <Clock className="h-3 w-3 mr-1" />
+                Recent
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Environment List */}
+        <div className="flex-1 overflow-y-auto px-2">
+          <div className="space-y-1">
+            {filteredEnvironments.map((env) => (
+              <Link key={env.id} href={env.href}>
+                <div
+                  className={`
+                    group relative flex items-center gap-3 p-3 rounded-lg 
+                    hover:bg-white/10 transition-all duration-200 cursor-pointer
+                    ${isExpanded ? "mx-2" : "mx-1 justify-center"}
+                  `}
+                >
+                  {/* Icon */}
+                  <div className="relative">
+                    <div
+                      className={`
+                      p-2 rounded-lg bg-gradient-to-r from-purple-500/20 to-pink-600/20
+                      group-hover:from-purple-500/30 group-hover:to-pink-600/30
+                      transition-all duration-200
+                    `}
+                    >
+                      <env.icon className="h-5 w-5 text-white" />
+                    </div>
+
+                    {/* Status Indicator */}
+                    <div
+                      className={`
+                      absolute -top-1 -right-1 w-3 h-3 rounded-full ${getStatusColor(env.status)}
+                      ${env.status === "beta" ? "animate-pulse" : ""}
+                    `}
+                    />
+                  </div>
+
+                  {/* Content */}
+                  {isExpanded && (
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-medium text-sm truncate">{env.name}</h3>
+                        {env.isBookmarked && <Star className="h-3 w-3 text-yellow-400 flex-shrink-0" />}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate mb-1">{env.description}</p>
+
+                      {/* Quick Stats */}
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          <span>{env.users > 1000 ? `${Math.round(env.users / 1000)}k` : env.users}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <TrendingUp className="h-3 w-3" />
+                          <span className="text-green-400">+{env.growth}%</span>
+                        </div>
+                      </div>
+
+                      {/* Last Accessed */}
+                      {env.lastAccessed && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          <Clock className="h-3 w-3 inline mr-1" />
+                          {env.lastAccessed}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Hover Arrow */}
+                  {isExpanded && (
+                    <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  )}
+                </div>
+              </Link>
             ))}
           </div>
 
-          {/* Footer Status */}
-          <Separator className="bg-white/20 my-2" />
-          <div className="mt-auto">
-            <Button
-              variant="ghost"
-              className={cn(
-                "w-full transition-all duration-200",
-                isExpanded ? "justify-start pl-2" : "justify-center",
-                "text-white/80 hover:bg-white/10 hover:text-white",
+          {/* No Results */}
+          {isExpanded && filteredEnvironments.length === 0 && (
+            <div className="text-center py-8 px-4">
+              <Search className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground">No environments found</p>
+              {searchQuery && (
+                <Button variant="ghost" size="sm" onClick={clearSearch} className="mt-2 text-xs">
+                  Clear search
+                </Button>
               )}
-            >
-              <Settings className="w-5 h-5 shrink-0" />
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.span
-                    initial={{ opacity: 0, width: 0, marginLeft: 0 }}
-                    animate={{ opacity: 1, width: "auto", marginLeft: "0.75rem" }}
-                    exit={{ opacity: 0, width: 0, marginLeft: 0 }}
-                    className="flex-1 text-left truncate"
-                  >
-                    Settings
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </Button>
-          </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-white/10 p-4">
+          {isExpanded ? (
+            <div className="space-y-3">
+              {/* Profile Card */}
+              <QuantumProfileCard />
+
+              {/* Portal Switcher */}
+              <PortalSwitcher />
+
+              {/* Quick Actions */}
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" className="flex-1 text-xs">
+                  <Settings className="h-3 w-3 mr-1" />
+                  Settings
+                </Button>
+                <Button variant="ghost" size="sm" className="flex-1 text-xs">
+                  <HelpCircle className="h-3 w-3 mr-1" />
+                  Help
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Button variant="ghost" size="sm" className="w-full p-2">
+                <User className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="sm" className="w-full p-2">
+                <Settings className="h-5 w-5" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
