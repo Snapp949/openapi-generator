@@ -25,11 +25,31 @@ interface OverallProgress {
 }
 
 interface QuantumProfileCardProps {
-  userInfo: UserInfo
-  overallProgress: OverallProgress
+  userInfo?: UserInfo
+  overallProgress?: OverallProgress
 }
 
-export function QuantumProfileCard({ userInfo, overallProgress }: QuantumProfileCardProps) {
+const defaultUserInfo: UserInfo = {
+  name: "New User",
+  email: "new.user@example.com",
+  role: "user",
+  joinDate: new Date().toISOString(),
+  lastActive: "just now",
+}
+
+const defaultOverallProgress: OverallProgress = {
+  progress: 0,
+  status: "on-track",
+  onTrack: 0,
+  atRisk: 0,
+  behind: 0,
+  total: 0,
+}
+
+export function QuantumProfileCard({
+  userInfo = defaultUserInfo,
+  overallProgress = defaultOverallProgress,
+}: QuantumProfileCardProps) {
   const [isExpanded, setIsExpanded] = React.useState(false)
   const [currentTime, setCurrentTime] = React.useState(new Date())
 
