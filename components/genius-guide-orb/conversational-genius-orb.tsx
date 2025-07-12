@@ -5,9 +5,9 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 
-type ConversationalGeniusOrbProps = {}
+export type ConversationalGeniusOrbProps = {}
 
-const ConversationalGeniusOrb: React.FC<ConversationalGeniusOrbProps> = () => {
+export const ConversationalGeniusOrb: React.FC<ConversationalGeniusOrbProps> = () => {
   const [isPremiumUnlocked, setIsPremiumUnlocked] = useState(true) // Simulate premium status
 
   useEffect(() => {
@@ -38,4 +38,5 @@ const ConversationalGeniusOrb: React.FC<ConversationalGeniusOrbProps> = () => {
   )
 }
 
+// Keep default export for existing imports
 export default ConversationalGeniusOrb
