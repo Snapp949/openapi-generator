@@ -1,182 +1,187 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
-import { Sparkles, Star, Zap } from "lucide-react"
-import { motion } from "framer-motion"
-import { cn } from "@/lib/utils"
+import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Sparkles, Zap, Star, Crown } from "lucide-react"
 
 interface CursorOrbProps {
-  enabled?: boolean
+  variant?: "default" | "premium" | "royal" | "quantum"
+  size?: "sm" | "md" | "lg"
+  intensity?: "low" | "medium" | "high"
 }
 
-interface TrailPoint {
-  x: number
-  y: number
-  id: number
-  timestamp: number
-}
-
-export function CursorOrb({ enabled = true }: CursorOrbProps) {
+export function CursorOrb({ variant = "default", size = "md", intensity = "medium" }: CursorOrbProps) {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  const [trail, setTrail] = useState<TrailPoint[]>([])
   const [isVisible, setIsVisible] = useState(false)
-  const trailIdRef = useRef(0)
+  const [isClicking, setIsClicking] = useState(false)
+  const [trail, setTrail] = useState<Array<{ x: number; y: number; id: number }>>([])
 
   useEffect(() => {
-    if (!enabled) return
+    let trailId = 0
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const updateMousePosition = (e: MouseEvent) => {
       const newPosition = { x: e.clientX, y: e.clientY }
       setMousePosition(newPosition)
-      setIsVisible(true)
 
-      // Add new trail point
-      const newTrailPoint: TrailPoint = {
-        x: e.clientX,
-        y: e.clientY,
-        id: trailIdRef.current++,
-        timestamp: Date.now(),
+      // Add to trail
+      if (intensity !== "low") {
+        setTrail((prev) => {
+          const newTrail = [{ ...newPosition, id: trailId++ }, ...prev.slice(0, 8)]
+          return newTrail
+        })
       }
 
-      setTrail((prevTrail) => {
-        const updatedTrail = [...prevTrail, newTrailPoint]
-        // Keep only the last 15 trail points
-        return updatedTrail.slice(-15)
-      })
+      if (!isVisible) setIsVisible(true)
     }
 
-    const handleMouseLeave = () => {
-      setIsVisible(false)
-    }
+    const handleMouseDown = () => setIsClicking(true)
+    const handleMouseUp = () => setIsClicking(false)
+    const handleMouseLeave = () => setIsVisible(false)
+    const handleMouseEnter = () => setIsVisible(true)
 
-    const handleMouseEnter = () => {
-      setIsVisible(true)
-    }
-
-    document.addEventListener("mousemove", handleMouseMove)
+    window.addEventListener("mousemove", updateMousePosition)
+    window.addEventListener("mousedown", handleMouseDown)
+    window.addEventListener("mouseup", handleMouseUp)
     document.addEventListener("mouseleave", handleMouseLeave)
     document.addEventListener("mouseenter", handleMouseEnter)
 
-    // Clean up old trail points
-    const trailCleanup = setInterval(() => {
-      const now = Date.now()
-      setTrail((prevTrail) => prevTrail.filter((point) => now - point.timestamp < 1000))
-    }, 100)
-
     return () => {
-      document.removeEventListener("mousemove", handleMouseMove)
+      window.removeEventListener("mousemove", updateMousePosition)
+      window.removeEventListener("mousedown", handleMouseDown)
+      window.removeEventListener("mouseup", handleMouseUp)
       document.removeEventListener("mouseleave", handleMouseLeave)
       document.removeEventListener("mouseenter", handleMouseEnter)
-      clearInterval(trailCleanup)
     }
-  }, [enabled])
+  }, [isVisible, intensity])
 
-  if (!enabled || !isVisible) return null
+  const getOrbSize = () => {
+    switch (size) {
+      case "sm":
+        return "w-4 h-4"
+      case "lg":
+        return "w-8 h-8"
+      default:
+        return "w-6 h-6"
+    }
+  }
+
+  const getOrbColors = () => {
+    switch (variant) {
+      case "premium":
+        return "from-blue-400 via-cyan-400 to-blue-600"
+      case "royal":
+        return "from-yellow-400 via-orange-400 to-red-500"
+      case "quantum":
+        return "from-purple-400 via-pink-400 to-purple-600"
+      default:
+        return "from-purple-400 via-blue-400 to-cyan-400"
+    }
+  }
+
+  const getIcon = () => {
+    switch (variant) {
+      case "premium":
+        return Zap
+      case "royal":
+        return Crown
+      case "quantum":
+        return Star
+      default:
+        return Sparkles
+    }
+  }
+
+  const Icon = getIcon()
 
   return (
-    <div className={cn("fixed inset-0 pointer-events-none z-[10000]", "")}>
-      {/* Trail Points */}
-      {trail.map((point, index) => {
-        const age = Date.now() - point.timestamp
-        const opacity = Math.max(0, 1 - age / 1000)
-        const scale = Math.max(0.1, 1 - age / 1000)
+    <div className="fixed inset-0 pointer-events-none z-50">
+      <AnimatePresence>
+        {isVisible && (
+          <>
+            {/* Trail Effect */}
+            {intensity !== "low" &&
+              trail.map((point, index) => (
+                <motion.div
+                  key={point.id}
+                  initial={{ opacity: 0.8, scale: 1 }}
+                  animate={{ opacity: 0, scale: 0.5 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.05 }}
+                  className={`absolute ${getOrbSize()} rounded-full bg-gradient-to-r ${getOrbColors()} opacity-30`}
+                  style={{
+                    left: point.x - (size === "sm" ? 8 : size === "lg" ? 16 : 12),
+                    top: point.y - (size === "sm" ? 8 : size === "lg" ? 16 : 12),
+                  }}
+                />
+              ))}
 
-        return (
-          <motion.div
-            key={point.id}
-            initial={{ opacity: 0.8, scale: 1 }}
-            animate={{ opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="absolute"
-            style={{
-              left: point.x - 4,
-              top: point.y - 4,
-              opacity,
-              transform: `scale(${scale})`,
-            }}
-          >
-            <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full" />
-          </motion.div>
-        )
-      })}
+            {/* Main Orb */}
+            <motion.div
+              className={`absolute ${getOrbSize()} rounded-full bg-gradient-to-r ${getOrbColors()} shadow-lg`}
+              style={{
+                left: mousePosition.x - (size === "sm" ? 8 : size === "lg" ? 16 : 12),
+                top: mousePosition.y - (size === "sm" ? 8 : size === "lg" ? 16 : 12),
+              }}
+              animate={{
+                scale: isClicking ? 1.5 : 1,
+                rotate: [0, 360],
+              }}
+              transition={{
+                scale: { duration: 0.1 },
+                rotate: { duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" },
+              }}
+            >
+              <div className="absolute inset-0 rounded-full bg-white/20 animate-pulse" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Icon className="w-3 h-3 text-white" />
+              </div>
+            </motion.div>
 
-      {/* Main Orb */}
-      <motion.div
-        className="absolute pointer-events-none"
-        animate={{
-          x: mousePosition.x - 16,
-          y: mousePosition.y - 16,
-        }}
-        transition={{
-          type: "spring",
-          stiffness: 500,
-          damping: 30,
-          mass: 0.5,
-        }}
-      >
-        {/* Outer Glow */}
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.6, 0.3],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-          }}
-          className="absolute inset-0 w-8 h-8 rounded-full bg-gradient-to-r from-cyan-400/30 to-blue-500/30 blur-md animate-pulse"
-        />
+            {/* Click Ripple Effect */}
+            <AnimatePresence>
+              {isClicking && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0.8 }}
+                  animate={{ scale: 3, opacity: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.6 }}
+                  className={`absolute w-12 h-12 rounded-full border-2 border-white/50`}
+                  style={{
+                    left: mousePosition.x - 24,
+                    top: mousePosition.y - 24,
+                  }}
+                />
+              )}
+            </AnimatePresence>
 
-        {/* Rotating Ring */}
-        <motion.div
-          animate={{
-            rotate: 360,
-          }}
-          transition={{
-            duration: 8,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "linear",
-          }}
-          className="absolute inset-1 w-6 h-6 rounded-full border border-cyan-400/50 animate-spin"
-          style={{ animationDuration: "3s" }}
-        />
-
-        {/* Core Orb */}
-        <motion.div
-          animate={{
-            scale: [0.8, 1, 0.8],
-          }}
-          transition={{
-            duration: 1.5,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-          }}
-          className="absolute inset-2 w-4 h-4 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 animate-pulse shadow-lg shadow-cyan-500/50"
-        >
-          <motion.div className="absolute inset-0.5 bg-gradient-to-r from-white/20 to-transparent rounded-full" />
-        </motion.div>
-
-        {/* Orbiting Icons */}
-        <motion.div className="absolute inset-0 animate-spin" style={{ animationDuration: "3s" }}>
-          <motion.div className="absolute w-3 h-3 text-cyan-300 -top-1 left-1/2 transform -translate-x-1/2">
-            <Sparkles />
-          </motion.div>
-        </motion.div>
-        <motion.div
-          className="absolute inset-0 animate-spin"
-          style={{ animationDuration: "4s", animationDirection: "reverse" }}
-        >
-          <motion.div className="absolute w-3 h-3 text-blue-300 top-1/2 -right-1 transform -translate-y-1/2">
-            <Star />
-          </motion.div>
-        </motion.div>
-        <motion.div className="absolute inset-0 animate-spin" style={{ animationDuration: "5s" }}>
-          <motion.div className="absolute w-3 h-3 text-purple-300 -bottom-1 left-1/2 transform -translate-x-1/2">
-            <Zap />
-          </motion.div>
-        </motion.div>
-      </motion.div>
+            {/* Particle Effects for High Intensity */}
+            {intensity === "high" && (
+              <div className="absolute inset-0">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-1 h-1 bg-white rounded-full"
+                    style={{
+                      left: mousePosition.x + Math.random() * 40 - 20,
+                      top: mousePosition.y + Math.random() * 40 - 20,
+                    }}
+                    animate={{
+                      y: [0, -20],
+                      opacity: [1, 0],
+                      scale: [1, 0],
+                    }}
+                    transition={{
+                      duration: 1,
+                      repeat: Number.POSITIVE_INFINITY,
+                      delay: i * 0.2,
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

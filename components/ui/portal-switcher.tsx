@@ -1,200 +1,228 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
-import { usePortal } from "@/contexts/portal-context"
+import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Crown, User, Building2, Landmark, Shield, ChevronDown, Zap, Globe } from "lucide-react"
-import { cn } from "@/lib/utils"
-import type { LucideIcon } from "lucide-react"
-import type { PortalType } from "@/types/portal" // Declare PortalType here
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Crown, Shield, Building, Users, Zap, ChevronDown, Check, Star, Sparkles, Globe } from "lucide-react"
+import { usePortal } from "@/contexts/portal-context"
+import { useRouter } from "next/navigation"
 
-const portalIcons: Record<PortalType, LucideIcon> = {
-  imperial: Crown,
-  citizen: User,
-  vendor: Building2,
-  institutional: Landmark,
-  admin: Shield,
+interface PortalOption {
+  id: string
+  name: string
+  description: string
+  icon: React.ElementType
+  color: string
+  features: string[]
+  isActive?: boolean
+  isPremium?: boolean
+  comingSoon?: boolean
 }
 
+const portalOptions: PortalOption[] = [
+  {
+    id: "citizen",
+    name: "Citizen Portal",
+    description: "Personal financial management and services",
+    icon: Shield,
+    color: "from-blue-500 to-cyan-600",
+    features: ["Personal Dashboard", "Credit Monitoring", "Loan Center", "Financial Planning"],
+    isActive: true,
+  },
+  {
+    id: "business",
+    name: "Business Portal",
+    description: "Comprehensive business management suite",
+    icon: Building,
+    color: "from-green-500 to-emerald-600",
+    features: ["Business Analytics", "Team Management", "Compliance", "Revenue Optimization"],
+    isActive: true,
+    isPremium: true,
+  },
+  {
+    id: "institutional",
+    name: "Institutional Portal",
+    description: "Enterprise-grade institutional services",
+    icon: Crown,
+    color: "from-yellow-500 to-orange-600",
+    features: ["Risk Management", "Compliance Suite", "Trading Desk", "Client Management"],
+    isActive: true,
+    isPremium: true,
+  },
+  {
+    id: "investor",
+    name: "Investor Portal",
+    description: "High-yield investment opportunities",
+    icon: Star,
+    color: "from-purple-500 to-pink-600",
+    features: ["Investment Opportunities", "Portfolio Management", "Market Analysis", "Returns Tracking"],
+    isActive: true,
+    isPremium: true,
+  },
+  {
+    id: "vendor",
+    name: "Vendor Portal",
+    description: "Supplier and vendor management",
+    icon: Users,
+    color: "from-indigo-500 to-purple-600",
+    features: ["Vendor Management", "Contract Tracking", "Payment Processing", "Performance Analytics"],
+    isActive: true,
+  },
+  {
+    id: "global",
+    name: "Global Portal",
+    description: "International operations and compliance",
+    icon: Globe,
+    color: "from-teal-500 to-blue-600",
+    features: ["Multi-Currency", "Global Compliance", "International Banking", "Cross-Border Payments"],
+    comingSoon: true,
+  },
+]
+
 export function PortalSwitcher() {
-  const { currentPortal, portalConfig, getUserPortalAccess, switchPortal } = usePortal()
   const [isOpen, setIsOpen] = useState(false)
-  const [switching, setSwitching] = useState(false)
+  const { currentPortal, switchPortal, portalConfig } = usePortal()
+  const router = useRouter()
 
-  const allowedPortals = getUserPortalAccess()
-  const CurrentIcon = portalIcons[currentPortal]
+  const currentPortalData = portalOptions.find((portal) => portal.id === currentPortal) || portalOptions[0]
 
-  // Fallback: if a portal lacks an icon, avoid rendering undefined
-  if (!CurrentIcon) {
-    return null
-  }
+  const handlePortalSwitch = async (portalId: string) => {
+    const portal = portalOptions.find((p) => p.id === portalId)
+    if (!portal || portal.comingSoon) return
 
-  const handlePortalSwitch = async (portal: typeof currentPortal) => {
-    if (portal === currentPortal) return
+    try {
+      await switchPortal(portalId)
 
-    setSwitching(true)
-    const success = await switchPortal(portal)
-    if (success) {
+      // Navigate to the portal's default route
+      const routes = {
+        citizen: "/citizen/dashboard",
+        business: "/business-suite",
+        institutional: "/institutional/dashboard",
+        investor: "/investors/portal",
+        vendor: "/vendor/dashboard",
+        global: "/global/dashboard",
+      }
+
+      const route = routes[portalId as keyof typeof routes] || "/dashboard"
+      router.push(route)
+
       setIsOpen(false)
-      // Add a small delay for visual feedback
-      setTimeout(() => setSwitching(false), 500)
-    } else {
-      setSwitching(false)
+    } catch (error) {
+      console.error("Error switching portal:", error)
     }
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className={cn(
-            "bg-gradient-to-r backdrop-blur-sm border-white/20 hover:border-white/40 transition-all duration-300",
-            portalConfig[currentPortal].color,
-            "text-white hover:text-white",
-          )}
-        >
-          <CurrentIcon className="h-4 w-4 mr-2" />
-          <span className="hidden sm:inline">{portalConfig[currentPortal].name}</span>
-          <span className="sm:hidden">{portalConfig[currentPortal].icon}</span>
-          <ChevronDown className="h-4 w-4 ml-2" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl bg-background/95 backdrop-blur-sm border-white/20">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Globe className="h-5 w-5" />
-            Portal Selection
-          </DialogTitle>
-          <DialogDescription>
-            Choose your access portal to navigate different areas of the Snapifi platform
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-          {allowedPortals.map((portalKey) => {
-            const portal = portalConfig[portalKey]
-            const Icon = portalIcons[portalKey] ?? Globe
-            const isActive = currentPortal === portalKey
-            const isImperial = portalKey === "imperial"
-            const isCitizen = portalKey === "citizen"
-            const isVendor = portalKey === "vendor"
-
-            return (
-              <Card
-                key={portalKey}
-                className={cn(
-                  "cursor-pointer transition-all duration-300 hover:scale-105 border-white/20 backdrop-blur-sm",
-                  isActive
-                    ? `bg-gradient-to-br ${portal.color} border-white/40 shadow-lg`
-                    : "bg-background/50 hover:bg-background/70 hover:border-white/30",
-                )}
-                onClick={() => handlePortalSwitch(portalKey)}
-              >
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Icon className={cn("h-5 w-5", isActive ? "text-white" : "text-primary")} />
-                      <span className={cn("text-sm", isActive ? "text-white" : "text-foreground")}>{portal.name}</span>
-                    </div>
-                    {isActive && (
-                      <Badge variant="secondary" className="text-xs">
-                        Active
-                      </Badge>
-                    )}
-                  </CardTitle>
-                  <CardDescription className={cn(isActive ? "text-white/80" : "text-muted-foreground")}>
-                    {portal.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-2">
-                    {isImperial && (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-xs">
-                          <Shield className="h-3 w-3" />
-                          <span className={isActive ? "text-white/90" : "text-muted-foreground"}>
-                            System Administration
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs">
-                          <Zap className="h-3 w-3" />
-                          <span className={isActive ? "text-white/90" : "text-muted-foreground"}>Backend Controls</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs">
-                          <Crown className="h-3 w-3" />
-                          <span className={isActive ? "text-white/90" : "text-muted-foreground"}>
-                            Imperial Authority
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {isCitizen && (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-xs">
-                          <User className="h-3 w-3" />
-                          <span className={isActive ? "text-white/90" : "text-muted-foreground"}>
-                            Personal Dashboard
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs">
-                          <Shield className="h-3 w-3" />
-                          <span className={isActive ? "text-white/90" : "text-muted-foreground"}>
-                            Financial Services
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs">
-                          <Zap className="h-3 w-3" />
-                          <span className={isActive ? "text-white/90" : "text-muted-foreground"}>AI-Powered Tools</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {isVendor && (
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-xs">
-                          <Building2 className="h-3 w-3" />
-                          <span className={isActive ? "text-white/90" : "text-muted-foreground"}>Business Portal</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs">
-                          <Shield className="h-3 w-3" />
-                          <span className={isActive ? "text-white/90" : "text-muted-foreground"}>Partner Services</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs">
-                          <Zap className="h-3 w-3" />
-                          <span className={isActive ? "text-white/90" : "text-muted-foreground"}>
-                            Third-Party Integration
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-
-        {switching && (
-          <div className="flex items-center justify-center py-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-              Switching portals...
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" className="w-full justify-between bg-white/5 border-white/20 hover:bg-white/10">
+          <div className="flex items-center gap-2">
+            <div className={`p-1 rounded bg-gradient-to-r ${currentPortalData.color}`}>
+              <currentPortalData.icon className="h-3 w-3 text-white" />
             </div>
+            <span className="text-sm font-medium">{currentPortalData.name}</span>
           </div>
-        )}
-      </DialogContent>
-    </Dialog>
+          <ChevronDown className="h-3 w-3" />
+        </Button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align="start" className="w-80 bg-slate-900/95 backdrop-blur-xl border-purple-500/30">
+        <div className="p-3">
+          <h3 className="font-semibold text-sm mb-2">Switch Portal</h3>
+          <p className="text-xs text-muted-foreground mb-4">Choose your workspace based on your role and needs</p>
+
+          <div className="space-y-2">
+            {portalOptions.map((portal) => (
+              <motion.div key={portal.id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <DropdownMenuItem
+                  className={`p-0 ${portal.comingSoon ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  onSelect={() => !portal.comingSoon && handlePortalSwitch(portal.id)}
+                >
+                  <div className="w-full p-3 rounded-lg hover:bg-white/5 transition-colors">
+                    <div className="flex items-start gap-3">
+                      <div className={`p-2 rounded-lg bg-gradient-to-r ${portal.color} flex-shrink-0`}>
+                        <portal.icon className="h-4 w-4 text-white" />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-medium text-sm">{portal.name}</h4>
+                          {portal.id === currentPortal && <Check className="h-3 w-3 text-green-400" />}
+                          {portal.isPremium && (
+                            <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
+                              <Crown className="h-2 w-2 mr-1" />
+                              Premium
+                            </Badge>
+                          )}
+                          {portal.comingSoon && (
+                            <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30 text-xs">
+                              <Sparkles className="h-2 w-2 mr-1" />
+                              Soon
+                            </Badge>
+                          )}
+                        </div>
+
+                        <p className="text-xs text-muted-foreground mb-2">{portal.description}</p>
+
+                        <div className="flex flex-wrap gap-1">
+                          {portal.features.slice(0, 3).map((feature) => (
+                            <Badge key={feature} variant="secondary" className="text-xs bg-white/10 text-white/70">
+                              {feature}
+                            </Badge>
+                          ))}
+                          {portal.features.length > 3 && (
+                            <Badge variant="secondary" className="text-xs bg-white/10 text-white/70">
+                              +{portal.features.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </DropdownMenuItem>
+              </motion.div>
+            ))}
+          </div>
+
+          <DropdownMenuSeparator className="my-3 bg-white/10" />
+
+          <div className="space-y-2">
+            <DropdownMenuItem className="p-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-8"
+                onClick={() => router.push("/portal/settings")}
+              >
+                <Zap className="h-3 w-3 mr-2" />
+                Portal Settings
+              </Button>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem className="p-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start h-8"
+                onClick={() => router.push("/portal/permissions")}
+              >
+                <Shield className="h-3 w-3 mr-2" />
+                Manage Permissions
+              </Button>
+            </DropdownMenuItem>
+          </div>
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

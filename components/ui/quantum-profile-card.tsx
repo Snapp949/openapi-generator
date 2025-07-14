@@ -1,264 +1,319 @@
 "use client"
 
-import * as React from "react"
+import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { User, ChevronUp, Settings, Bell, Wifi, Battery, Shield, Crown, Check, RefreshCw } from "lucide-react"
-
-interface UserInfo {
-  name: string
-  email: string
-  role: "admin" | "moderator" | "user"
-  joinDate: string
-  lastActive: string
-}
-
-interface OverallProgress {
-  progress: number
-  status: string
-  onTrack: number
-  atRisk: number
-  behind: number
-  total: number
-}
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { User, Crown, Star, Shield, Settings, LogOut, Award, ChevronDown, Sparkles } from "lucide-react"
+import { useEcosystem } from "@/contexts/ecosystem-context"
+import { useRouter } from "next/navigation"
 
 interface QuantumProfileCardProps {
-  userInfo?: UserInfo
-  overallProgress?: OverallProgress
-}
-
-const defaultUserInfo: UserInfo = {
-  name: "New User",
-  email: "new.user@example.com",
-  role: "user",
-  joinDate: new Date().toISOString(),
-  lastActive: "just now",
-}
-
-const defaultOverallProgress: OverallProgress = {
-  progress: 0,
-  status: "on-track",
-  onTrack: 0,
-  atRisk: 0,
-  behind: 0,
-  total: 0,
+  variant?: "compact" | "expanded" | "minimal"
+  showStats?: boolean
+  showActions?: boolean
 }
 
 export function QuantumProfileCard({
-  userInfo = defaultUserInfo,
-  overallProgress = defaultOverallProgress,
+  variant = "compact",
+  showStats = true,
+  showActions = true,
 }: QuantumProfileCardProps) {
-  const [isExpanded, setIsExpanded] = React.useState(false)
-  const [currentTime, setCurrentTime] = React.useState(new Date())
+  const [isExpanded, setIsExpanded] = useState(false)
+  const { userProfile, crossPlatformData } = useEcosystem()
+  const router = useRouter()
 
-  // Update time every second
-  React.useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [])
-
-  // Get role color and icon
-  const getRoleInfo = (role: string) => {
-    switch (role) {
-      case "admin":
-        return {
-          color: "text-red-500 bg-red-500/20",
-          icon: Crown,
-          label: "Administrator",
-        }
-      case "moderator":
-        return {
-          color: "text-yellow-500 bg-yellow-500/20",
-          icon: Shield,
-          label: "Moderator",
-        }
-      default:
-        return {
-          color: "text-blue-500 bg-blue-500/20",
-          icon: User,
-          label: "User",
-        }
-    }
-  }
-
-  // Get progress bar color based on status
-  const getProgressBarColor = (status: string) => {
-    switch (status) {
-      case "on-track":
-        return "bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-600 shadow-emerald-500/50 shadow-lg"
-      case "at-risk":
-        return "bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 shadow-yellow-500/50 shadow-lg"
-      case "behind":
-        return "bg-gradient-to-r from-red-400 via-red-500 to-red-600 shadow-red-500/50 shadow-lg"
-      default:
-        return "bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 shadow-blue-500/50 shadow-lg"
-    }
-  }
-
-  const roleInfo = getRoleInfo(userInfo.role)
-  const progressBarColor = getProgressBarColor(overallProgress.status)
-
-  return (
-    <div
-      className="fixed top-4 right-4 z-50 transition-all duration-300 ease-in-out"
-      onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
-    >
-      <Card
-        className={`bg-gradient-to-br from-background/95 to-background/80 backdrop-blur-xl border-white/20 shadow-2xl transition-all duration-300 ${
-          isExpanded ? "w-96 h-auto" : "w-16 h-16"
-        }`}
-      >
+  if (!userProfile) {
+    return (
+      <Card className="bg-gradient-to-br from-slate-800/50 to-purple-800/50 border-purple-500/30">
         <CardContent className="p-4">
-          {!isExpanded ? (
-            <div className="flex items-center justify-center w-8 h-8 relative">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-                <User className="h-4 w-4 text-primary" />
-              </div>
-              {/* Profile Online Indicator */}
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-pulse border-2 border-background" />
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center">
+              <User className="h-5 w-5 text-white" />
             </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-                      <roleInfo.icon className={`h-6 w-6 ${roleInfo.color.split(" ")[0]}`} />
-                    </div>
-                    {/* Profile Online Indicator */}
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full animate-pulse border-2 border-background flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white rounded-full animate-ping" />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">{userInfo.name}</h3>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={`text-xs ${roleInfo.color}`}>
-                        {roleInfo.label}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs text-emerald-500 bg-emerald-500/20 animate-pulse">
-                        <User className="h-3 w-3 mr-1" />
-                        Profile: Online
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-                <ChevronUp className="h-4 w-4 text-muted-foreground" />
-              </div>
-
-              {/* User Information */}
-              <div className="space-y-3 p-3 rounded-lg bg-gradient-to-br from-white/5 to-white/10 border border-white/10">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Email</p>
-                    <p className="font-medium truncate">{userInfo.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Member Since</p>
-                    <p className="font-medium">{new Date(userInfo.joinDate).toLocaleDateString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Last Active</p>
-                    <p className="font-medium text-emerald-500">{userInfo.lastActive}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Current Time</p>
-                    <p className="font-medium">{currentTime.toLocaleTimeString()}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* System Status */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-medium text-muted-foreground">System Status</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Wifi className="h-4 w-4 text-emerald-500" />
-                      <span className="text-sm">Connection</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Progress value={95} className="w-16 h-2" />
-                      <span className="text-xs text-emerald-500">95%</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Battery className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm">Power Level</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Progress value={87} className="w-16 h-2" />
-                      <span className="text-xs text-blue-500">87%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Financial Progress */}
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span>Financial Goals Progress</span>
-                  <span className="font-medium">{overallProgress.progress.toFixed(1)}%</span>
-                </div>
-
-                <div className="relative">
-                  <Progress value={overallProgress.progress} className="h-3 bg-white/10" />
-                  <div
-                    className={`absolute top-0 left-0 h-3 rounded-full transition-all duration-500 ${progressBarColor}`}
-                    style={{ width: `${overallProgress.progress}%` }}
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div className="text-center">
-                    <div className="font-medium text-emerald-500">{overallProgress.onTrack}</div>
-                    <div className="text-muted-foreground">On Track</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-medium text-yellow-500">{overallProgress.atRisk}</div>
-                    <div className="text-muted-foreground">At Risk</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-medium text-red-500">{overallProgress.behind}</div>
-                    <div className="text-muted-foreground">Behind</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="flex gap-2 pt-2 border-t border-white/10">
-                <Button size="sm" variant="outline" className="flex-1 bg-transparent">
-                  <Settings className="h-3 w-3 mr-1" />
-                  Settings
-                </Button>
-                <Button size="sm" variant="outline" className="flex-1 bg-transparent">
-                  <Bell className="h-3 w-3 mr-1" />
-                  Alerts
-                </Button>
-              </div>
-
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="flex-1 bg-transparent">
-                  <RefreshCw className="h-3 w-3 mr-1" />
-                  Recalculate
-                </Button>
-                <Button size="sm" className="flex-1">
-                  <Check className="h-3 w-3 mr-1" />
-                  Accept
-                </Button>
-              </div>
+            <div>
+              <div className="font-medium">Guest User</div>
+              <div className="text-sm text-muted-foreground">Sign in to access features</div>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
-    </div>
+    )
+  }
+
+  const getTierIcon = () => {
+    switch (userProfile.tier) {
+      case "enterprise":
+        return Crown
+      case "premium":
+        return Star
+      default:
+        return Shield
+    }
+  }
+
+  const getTierColor = () => {
+    switch (userProfile.tier) {
+      case "enterprise":
+        return "from-yellow-400 to-orange-500"
+      case "premium":
+        return "from-purple-400 to-pink-500"
+      default:
+        return "from-blue-400 to-cyan-500"
+    }
+  }
+
+  const getTierBadgeColor = () => {
+    switch (userProfile.tier) {
+      case "enterprise":
+        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+      case "premium":
+        return "bg-purple-500/20 text-purple-400 border-purple-500/30"
+      default:
+        return "bg-blue-500/20 text-blue-400 border-blue-500/30"
+    }
+  }
+
+  const TierIcon = getTierIcon()
+
+  const achievements = userProfile.achievements || []
+  const stats = userProfile.stats || {
+    totalLogins: 0,
+    platformsUsed: [],
+    featuresUnlocked: 0,
+    transactionsCompleted: 0,
+    creditScoreImprovement: 0,
+    investmentReturns: 0,
+    realEstateViewed: 0,
+    businessMetricsTracked: 0,
+  }
+
+  const profileCompleteness =
+    Math.min(
+      ((userProfile.name ? 20 : 0) +
+        (userProfile.email ? 20 : 0) +
+        (stats.platformsUsed.length > 0 ? 20 : 0) +
+        (achievements.length > 0 ? 20 : 0) +
+        (stats.featuresUnlocked > 5 ? 20 : 0)) /
+        100,
+      1,
+    ) * 100
+
+  if (variant === "minimal") {
+    return (
+      <div className="flex items-center gap-2">
+        <div className={`w-8 h-8 rounded-full bg-gradient-to-r ${getTierColor()} flex items-center justify-center`}>
+          <TierIcon className="h-4 w-4 text-white" />
+        </div>
+        <div>
+          <div className="font-medium text-sm">{userProfile.name}</div>
+          <div className="text-xs text-muted-foreground capitalize">{userProfile.tier}</div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <Card className="bg-gradient-to-br from-slate-800/50 to-purple-800/50 border-purple-500/30 overflow-hidden">
+      <CardContent className="p-0">
+        <motion.div initial={false} animate={{ height: isExpanded ? "auto" : "auto" }} transition={{ duration: 0.3 }}>
+          {/* Header */}
+          <div className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div
+                  className={`w-12 h-12 rounded-full bg-gradient-to-r ${getTierColor()} flex items-center justify-center`}
+                >
+                  <TierIcon className="h-6 w-6 text-white" />
+                </div>
+                <div className="absolute -bottom-1 -right-1">
+                  <Badge className={`text-xs px-1 py-0 ${getTierBadgeColor()}`}>
+                    {userProfile.tier.charAt(0).toUpperCase()}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold">{userProfile.name}</h3>
+                  {userProfile.tier === "enterprise" && <Crown className="h-4 w-4 text-yellow-400" />}
+                  {userProfile.tier === "premium" && <Star className="h-4 w-4 text-purple-400" />}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className={`text-xs ${getTierBadgeColor()}`}>{userProfile.tier}</Badge>
+                  {achievements.length > 0 && (
+                    <Badge variant="secondary" className="text-xs">
+                      <Award className="h-3 w-3 mr-1" />
+                      {achievements.length}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {showActions && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => router.push("/profile")}>
+                      <User className="h-4 w-4 mr-2" />
+                      View Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push("/settings")}>
+                      <Settings className="h-4 w-4 mr-2" />
+                      Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push("/upgrade")}>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Upgrade Plan
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+
+            {/* Profile Completeness */}
+            {showStats && (
+              <div className="mt-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Profile Completeness</span>
+                  <span className="font-medium">{Math.round(profileCompleteness)}%</span>
+                </div>
+                <Progress value={profileCompleteness} className="h-2" />
+              </div>
+            )}
+          </div>
+
+          {/* Expanded Stats */}
+          <AnimatePresence>
+            {(variant === "expanded" || isExpanded) && showStats && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="border-t border-white/10 p-4 space-y-4"
+              >
+                {/* Quick Stats */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="text-center p-3 rounded-lg bg-white/5">
+                    <div className="text-lg font-bold text-green-400">{stats.platformsUsed.length}</div>
+                    <div className="text-xs text-muted-foreground">Platforms Used</div>
+                  </div>
+                  <div className="text-center p-3 rounded-lg bg-white/5">
+                    <div className="text-lg font-bold text-blue-400">{stats.featuresUnlocked}</div>
+                    <div className="text-xs text-muted-foreground">Features Unlocked</div>
+                  </div>
+                  <div className="text-center p-3 rounded-lg bg-white/5">
+                    <div className="text-lg font-bold text-purple-400">{stats.totalLogins}</div>
+                    <div className="text-xs text-muted-foreground">Total Logins</div>
+                  </div>
+                  <div className="text-center p-3 rounded-lg bg-white/5">
+                    <div className="text-lg font-bold text-yellow-400">{achievements.length}</div>
+                    <div className="text-xs text-muted-foreground">Achievements</div>
+                  </div>
+                </div>
+
+                {/* Recent Achievements */}
+                {achievements.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium">Recent Achievements</h4>
+                    <div className="space-y-1">
+                      {achievements.slice(0, 3).map((achievement) => (
+                        <div key={achievement.id} className="flex items-center gap-2 text-sm">
+                          <div className="w-6 h-6 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center">
+                            <Award className="h-3 w-3 text-white" />
+                          </div>
+                          <span className="flex-1">{achievement.name}</span>
+                          <Badge
+                            variant="outline"
+                            className={`text-xs ${
+                              achievement.rarity === "legendary"
+                                ? "border-yellow-500/30 text-yellow-400"
+                                : achievement.rarity === "epic"
+                                  ? "border-purple-500/30 text-purple-400"
+                                  : achievement.rarity === "rare"
+                                    ? "border-blue-500/30 text-blue-400"
+                                    : "border-gray-500/30 text-gray-400"
+                            }`}
+                          >
+                            {achievement.rarity}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Financial Overview */}
+                {crossPlatformData && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium">Financial Overview</h4>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Credit Score:</span>
+                        <span className="font-medium text-green-400">
+                          {crossPlatformData.creditData?.score || "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Portfolio:</span>
+                        <span className="font-medium text-blue-400">
+                          ${crossPlatformData.portfolioData?.totalValue?.toLocaleString() || "0"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Goals:</span>
+                        <span className="font-medium text-purple-400">
+                          {crossPlatformData.financialGoals?.length || 0}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Properties:</span>
+                        <span className="font-medium text-orange-400">
+                          {crossPlatformData.realEstateData?.savedProperties?.length || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Toggle Button for Compact Variant */}
+          {variant === "compact" && showStats && (
+            <div className="border-t border-white/10 p-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="w-full h-8 text-xs"
+              >
+                {isExpanded ? "Show Less" : "Show More"}
+                <ChevronDown className={`h-3 w-3 ml-1 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+              </Button>
+            </div>
+          )}
+        </motion.div>
+      </CardContent>
+    </Card>
   )
 }
