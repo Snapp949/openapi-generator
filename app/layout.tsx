@@ -8,6 +8,7 @@ import { PortalProvider } from "@/contexts/portal-context"
 import { EnvironmentSidebar } from "@/components/sidebar/environment-sidebar"
 import { CursorOrb } from "@/components/ui/cursor-orb"
 import { ConversationalGeniusOrb } from "@/components/genius-guide-orb/conversational-genius-orb"
+import { EcosystemProvider } from "@/contexts/ecosystem-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -27,21 +28,23 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <PortalProvider>
-            <GlobalUnlockProvider>
-              <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-                {/* Environment Sidebar */}
-                <EnvironmentSidebar />
+          <EcosystemProvider>
+            <PortalProvider>
+              <GlobalUnlockProvider>
+                <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+                  {/* Environment Sidebar */}
+                  <EnvironmentSidebar />
 
-                {/* Main Content */}
-                <div className="ml-16 min-h-screen">{children}</div>
+                  {/* Main Content */}
+                  <div className="ml-16 min-h-screen">{children}</div>
 
-                {/* Global UI Elements */}
-                <CursorOrb />
-                <ConversationalGeniusOrb />
-              </div>
-            </GlobalUnlockProvider>
-          </PortalProvider>
+                  {/* Global UI Elements */}
+                  <CursorOrb />
+                  <ConversationalGeniusOrb />
+                </div>
+              </GlobalUnlockProvider>
+            </PortalProvider>
+          </EcosystemProvider>
         </ThemeProvider>
       </body>
     </html>
