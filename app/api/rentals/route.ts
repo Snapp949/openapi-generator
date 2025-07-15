@@ -38,7 +38,7 @@ const demoProperties: RentalProperty[] = [
     sqft: 700,
     images: ["/properties/downtown-loft.jpg", "/properties/luxury-interior-1.jpg"],
     description: "A charming apartment in the heart of the city, perfect for a couple's getaway.",
-    amenities: ["Wifi", "Kitchen", "AC", "TV"],
+    amenities: ["Wifi", "Kitchen", "AC", "TV", "Elevator", "City View"],
     rating: 4.8,
     reviews: 120,
     host: { name: "Alice Smith", avatar: "/placeholder-user.jpg" },
@@ -56,7 +56,7 @@ const demoProperties: RentalProperty[] = [
     sqft: 2200,
     images: ["/properties/suburban-family-home.jpg", "/properties/luxury-interior-2.jpg"],
     description: "Ideal for families, this house offers a large garden and easy access to attractions.",
-    amenities: ["Wifi", "Kitchen", "Parking", "Garden", "Washer/Dryer"],
+    amenities: ["Wifi", "Kitchen", "Parking", "Garden", "Washer/Dryer", "Pet-Friendly", "BBQ"],
     rating: 4.9,
     reviews: 85,
     host: { name: "Bob Johnson", avatar: "/placeholder-user.jpg" },
@@ -74,7 +74,7 @@ const demoProperties: RentalProperty[] = [
     sqft: 3500,
     images: ["/properties/oceanfront-estate.jpg", "/properties/luxury-interior-3.jpg"],
     description: "Experience luxury in this stunning beachfront villa with private pool.",
-    amenities: ["Private Pool", "Beach Access", "Chef's Kitchen", "Ocean View", "Gym"],
+    amenities: ["Private Pool", "Beach Access", "Chef's Kitchen", "Ocean View", "Gym", "Hot Tub", "Spa"],
     rating: 5.0,
     reviews: 45,
     host: { name: "Charlie Brown", avatar: "/placeholder-user.jpg" },
@@ -92,7 +92,7 @@ const demoProperties: RentalProperty[] = [
     sqft: 1200,
     images: ["/placeholder.svg?height=400&width=600"],
     description: "Escape to this peaceful cabin nestled in the mountains, perfect for nature lovers.",
-    amenities: ["Fireplace", "Hot Tub", "Hiking Trails", "Pet-Friendly"],
+    amenities: ["Fireplace", "Hot Tub", "Hiking Trails", "Pet-Friendly", "Mountain View", "Game Room"],
     rating: 4.7,
     reviews: 60,
     host: { name: "Diana Prince", avatar: "/placeholder-user.jpg" },
@@ -110,7 +110,7 @@ const demoProperties: RentalProperty[] = [
     sqft: 400,
     images: ["/placeholder.svg?height=400&width=600"],
     description: "Compact and stylish studio in a vibrant neighborhood, ideal for solo travelers.",
-    amenities: ["Wifi", "Kitchenette", "Public Transport Access"],
+    amenities: ["Wifi", "Kitchenette", "Public Transport Access", "Balcony", "Laundry"],
     rating: 4.5,
     reviews: 90,
     host: { name: "Eve Adams", avatar: "/placeholder-user.jpg" },
@@ -128,7 +128,7 @@ const demoProperties: RentalProperty[] = [
     sqft: 1100,
     images: ["/placeholder.svg?height=400&width=600"],
     description: "A serene cottage by the lake, perfect for a peaceful retreat.",
-    amenities: ["Lake Access", "Fire Pit", "BBQ", "Kayaks"],
+    amenities: ["Lake Access", "Fire Pit", "BBQ", "Kayaks", "Patio", "Outdoor Shower"],
     rating: 4.6,
     reviews: 70,
     host: { name: "Frank White", avatar: "/placeholder-user.jpg" },
@@ -146,7 +146,7 @@ const demoProperties: RentalProperty[] = [
     sqft: 850,
     images: ["/placeholder.svg?height=400&width=600"],
     description: "Stylish loft with breathtaking city skyline views.",
-    amenities: ["City View", "Gym Access", "Balcony", "Smart TV"],
+    amenities: ["City View", "Gym Access", "Balcony", "Smart TV", "Concierge", "Rooftop Access"],
     rating: 4.7,
     reviews: 110,
     host: { name: "Grace Lee", avatar: "/placeholder-user.jpg" },
@@ -164,7 +164,7 @@ const demoProperties: RentalProperty[] = [
     sqft: 2800,
     images: ["/placeholder.svg?height=400&width=600"],
     description: "A luxurious desert escape with a private pool and stunning mountain views.",
-    amenities: ["Private Pool", "Hot Tub", "Mountain View", "Outdoor Dining"],
+    amenities: ["Private Pool", "Hot Tub", "Mountain View", "Outdoor Dining", "Fire Pit", "Desert Landscape"],
     rating: 4.9,
     reviews: 55,
     host: { name: "Henry Green", avatar: "/placeholder-user.jpg" },
@@ -183,6 +183,13 @@ export async function GET(req: Request) {
   const checkIn = searchParams.get("checkIn")
   const checkOut = searchParams.get("checkOut")
   const sortBy = searchParams.get("sortBy") || "price-low"
+  const bedrooms = Number(searchParams.get("bedrooms")) || 0 // 0 means "any"
+  const bathrooms = Number(searchParams.get("bathrooms")) || 0 // 0 means "any"
+  const amenities =
+    searchParams
+      .get("amenities")
+      ?.split(",")
+      .map((a) => a.trim().toLowerCase()) || []
 
   const filteredProperties = demoProperties.filter((property) => {
     const matchesLocation =
@@ -205,7 +212,21 @@ export async function GET(req: Request) {
         requestedCheckIn < requestedCheckOut
     }
 
-    return matchesLocation && matchesPrice && matchesType && matchesGuests && matchesAvailability
+    const matchesBedrooms = bedrooms === 0 || property.bedrooms >= bedrooms
+    const matchesBathrooms = bathrooms === 0 || property.bathrooms >= bathrooms
+    const matchesAmenities =
+      amenities.length === 0 || amenities.every((a) => property.amenities.map((pa) => pa.toLowerCase()).includes(a))
+
+    return (
+      matchesLocation &&
+      matchesPrice &&
+      matchesType &&
+      matchesGuests &&
+      matchesAvailability &&
+      matchesBedrooms &&
+      matchesBathrooms &&
+      matchesAmenities
+    )
   })
 
   // Sorting logic

@@ -52,6 +52,9 @@ export default function SnapRentalsMarketplace() {
   const [properties, setProperties] = useState<RentalProperty[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [numBedrooms, setNumBedrooms] = useState("any")
+  const [numBathrooms, setNumBathrooms] = useState("any")
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
 
   const fetchProperties = useCallback(async () => {
     setLoading(true)
@@ -66,6 +69,9 @@ export default function SnapRentalsMarketplace() {
       if (dateRange?.from) params.append("checkIn", format(dateRange.from, "yyyy-MM-dd"))
       if (dateRange?.to) params.append("checkOut", format(dateRange.to, "yyyy-MM-dd"))
       params.append("sortBy", sortBy)
+      if (numBedrooms !== "any") params.append("bedrooms", numBedrooms)
+      if (numBathrooms !== "any") params.append("bathrooms", numBathrooms)
+      if (selectedAmenities.length > 0) params.append("amenities", selectedAmenities.join(","))
 
       const response = await fetch(`/api/rentals?${params.toString()}`)
       if (!response.ok) {
@@ -81,7 +87,17 @@ export default function SnapRentalsMarketplace() {
     } finally {
       setLoading(false)
     }
-  }, [searchQuery, priceRange, propertyType, numGuests, dateRange, sortBy])
+  }, [
+    searchQuery,
+    priceRange,
+    propertyType,
+    numGuests,
+    dateRange,
+    sortBy,
+    numBedrooms,
+    numBathrooms,
+    selectedAmenities,
+  ])
 
   useEffect(() => {
     fetchProperties()
@@ -109,7 +125,7 @@ export default function SnapRentalsMarketplace() {
       sqft: 700,
       images: ["/properties/downtown-loft.jpg", "/properties/luxury-interior-1.jpg"],
       description: "A charming apartment in the heart of the city, perfect for a couple's getaway.",
-      amenities: ["Wifi", "Kitchen", "AC", "TV"],
+      amenities: ["Wifi", "Kitchen", "AC", "TV", "Elevator", "City View"],
       rating: 4.8,
       reviews: 120,
       host: { name: "Alice Smith", avatar: "/placeholder-user.jpg" },
@@ -127,7 +143,7 @@ export default function SnapRentalsMarketplace() {
       sqft: 2200,
       images: ["/properties/suburban-family-home.jpg", "/properties/luxury-interior-2.jpg"],
       description: "Ideal for families, this house offers a large garden and easy access to attractions.",
-      amenities: ["Wifi", "Kitchen", "Parking", "Garden", "Washer/Dryer"],
+      amenities: ["Wifi", "Kitchen", "Parking", "Garden", "Washer/Dryer", "Pet-Friendly", "BBQ"],
       rating: 4.9,
       reviews: 85,
       host: { name: "Bob Johnson", avatar: "/placeholder-user.jpg" },
@@ -145,7 +161,7 @@ export default function SnapRentalsMarketplace() {
       sqft: 3500,
       images: ["/properties/oceanfront-estate.jpg", "/properties/luxury-interior-3.jpg"],
       description: "Experience luxury in this stunning beachfront villa with private pool.",
-      amenities: ["Private Pool", "Beach Access", "Chef's Kitchen", "Ocean View", "Gym"],
+      amenities: ["Private Pool", "Beach Access", "Chef's Kitchen", "Ocean View", "Gym", "Hot Tub", "Spa"],
       rating: 5.0,
       reviews: 45,
       host: { name: "Charlie Brown", avatar: "/placeholder-user.jpg" },
@@ -163,7 +179,7 @@ export default function SnapRentalsMarketplace() {
       sqft: 1200,
       images: ["/placeholder.svg?height=400&width=600"],
       description: "Escape to this peaceful cabin nestled in the mountains, perfect for nature lovers.",
-      amenities: ["Fireplace", "Hot Tub", "Hiking Trails", "Pet-Friendly"],
+      amenities: ["Fireplace", "Hot Tub", "Hiking Trails", "Pet-Friendly", "Mountain View", "Game Room"],
       rating: 4.7,
       reviews: 60,
       host: { name: "Diana Prince", avatar: "/placeholder-user.jpg" },
@@ -181,11 +197,65 @@ export default function SnapRentalsMarketplace() {
       sqft: 400,
       images: ["/placeholder.svg?height=400&width=600"],
       description: "Compact and stylish studio in a vibrant neighborhood, ideal for solo travelers.",
-      amenities: ["Wifi", "Kitchenette", "Public Transport Access"],
+      amenities: ["Wifi", "Kitchenette", "Public Transport Access", "Balcony", "Laundry"],
       rating: 4.5,
       reviews: 90,
       host: { name: "Eve Adams", avatar: "/placeholder-user.jpg" },
       availability: { startDate: "2025-08-15", endDate: "2025-11-15" },
+    },
+    {
+      id: "rent-6",
+      title: "Lakefront Cottage with Dock",
+      location: "Lake Tahoe, CA",
+      pricePerNight: 380,
+      type: "house",
+      bedrooms: 2,
+      bathrooms: 1,
+      guests: 4,
+      sqft: 1000,
+      images: ["/placeholder.svg?height=400&width=600"],
+      description: "Charming cottage on the lake with private dock and stunning views.",
+      amenities: ["Lake Access", "Fire Pit", "BBQ", "Kayaks", "Patio", "Outdoor Shower"],
+      rating: 4.6,
+      reviews: 75,
+      host: { name: "Frank Miller", avatar: "/placeholder-user.jpg" },
+      availability: { startDate: "2025-07-01", endDate: "2025-10-31" },
+    },
+    {
+      id: "rent-7",
+      title: "Penthouse Apartment with Skyline View",
+      location: "Chicago, IL",
+      pricePerNight: 550,
+      type: "apartment",
+      bedrooms: 2,
+      bathrooms: 2,
+      guests: 4,
+      sqft: 1800,
+      images: ["/placeholder.svg?height=400&width=600"],
+      description: "Luxurious penthouse with breathtaking city views and top-notch amenities.",
+      amenities: ["City View", "Gym Access", "Balcony", "Smart TV", "Concierge", "Rooftop Access"],
+      rating: 4.9,
+      reviews: 55,
+      host: { name: "Grace Taylor", avatar: "/placeholder-user.jpg" },
+      availability: { startDate: "2025-09-15", endDate: "2026-02-28" },
+    },
+    {
+      id: "rent-8",
+      title: "Desert Oasis with Private Pool",
+      location: "Scottsdale, AZ",
+      pricePerNight: 620,
+      type: "villa",
+      bedrooms: 3,
+      bathrooms: 3,
+      guests: 6,
+      sqft: 2500,
+      images: ["/placeholder.svg?height=400&width=600"],
+      description: "Stunning desert retreat with private pool, hot tub, and outdoor dining area.",
+      amenities: ["Private Pool", "Hot Tub", "Mountain View", "Outdoor Dining", "Fire Pit", "Desert Landscape"],
+      rating: 4.8,
+      reviews: 65,
+      host: { name: "Henry White", avatar: "/placeholder-user.jpg" },
+      availability: { startDate: "2025-08-01", endDate: "2026-01-31" },
     },
   ]
 
@@ -304,6 +374,67 @@ export default function SnapRentalsMarketplace() {
                     <SelectItem value="hotel">Hotel</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bedrooms" className="text-white">
+                  Bedrooms
+                </Label>
+                <Select value={numBedrooms} onValueChange={setNumBedrooms}>
+                  <SelectTrigger id="bedrooms" className="bg-slate-800/50 border-slate-600 text-white">
+                    <SelectValue placeholder="Any" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-600 text-white">
+                    <SelectItem value="any">Any</SelectItem>
+                    <SelectItem value="1">1+</SelectItem>
+                    <SelectItem value="2">2+</SelectItem>
+                    <SelectItem value="3">3+</SelectItem>
+                    <SelectItem value="4">4+</SelectItem>
+                    <SelectItem value="5">5+</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bathrooms" className="text-white">
+                  Bathrooms
+                </Label>
+                <Select value={numBathrooms} onValueChange={setNumBathrooms}>
+                  <SelectTrigger id="bathrooms" className="bg-slate-800/50 border-slate-600 text-white">
+                    <SelectValue placeholder="Any" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-600 text-white">
+                    <SelectItem value="any">Any</SelectItem>
+                    <SelectItem value="1">1+</SelectItem>
+                    <SelectItem value="2">2+</SelectItem>
+                    <SelectItem value="3">3+</SelectItem>
+                    <SelectItem value="4">4+</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2 lg:col-span-2">
+                <Label className="text-white">Amenities</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {["Wifi", "Kitchen", "AC", "Parking", "Pet-Friendly", "Pool", "Gym", "Hot Tub"].map((amenity) => (
+                    <div key={amenity} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`amenity-${amenity}`}
+                        checked={selectedAmenities.includes(amenity)}
+                        onCheckedChange={(checked) => {
+                          setSelectedAmenities((prev) =>
+                            checked ? [...prev, amenity] : prev.filter((a) => a !== amenity),
+                          )
+                        }}
+                        className="form-checkbox h-4 w-4 text-blue-600 bg-slate-700 border-slate-500 rounded focus:ring-blue-500"
+                      />
+                      <label htmlFor={`amenity-${amenity}`} className="text-sm font-medium text-white cursor-pointer">
+                        {amenity}
+                      </label>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-2 lg:col-span-2">
