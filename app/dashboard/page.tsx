@@ -45,9 +45,10 @@ export default function DashboardPage() {
   const { userProfile, crossPlatformData, trackPageView } = useEcosystem()
 
   useEffect(() => {
+    // Call once on mount
     trackPageView("/dashboard")
 
-    // Initialize dashboard metrics
+    // Dashboard metrics
     setMetrics([
       {
         title: "Total Portfolio Value",
@@ -83,6 +84,7 @@ export default function DashboardPage() {
       },
     ])
 
+    // Quick Actions
     setQuickActions([
       {
         title: "SNAP-DAX Trading",
@@ -125,7 +127,7 @@ export default function DashboardPage() {
         badge: "Beta",
       },
     ])
-  }, [trackPageView])
+  }, []) // ← depend on nothing so it only runs once
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
