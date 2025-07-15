@@ -1,40 +1,24 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
 import { ComprehensiveOnboarding } from "@/components/onboarding/comprehensive-onboarding"
-import { useEcosystem } from "@/contexts/ecosystem-context"
+import { useRouter } from "next/navigation"
 
 export default function OnboardingPage() {
-  const [showOnboarding, setShowOnboarding] = useState(true)
+  const [isOnboardingCompleted, setIsOnboardingCompleted] = useState(false)
   const router = useRouter()
-  const { addNotification } = useEcosystem()
 
   useEffect(() => {
-    // Check if onboarding was already completed
-    const isCompleted = localStorage.getItem("snapifi-onboarding-completed")
-    if (isCompleted) {
+    // Check if onboarding is already completed
+    const completed = localStorage.getItem("snapifi-onboarding-completed")
+    if (completed === "true") {
+      setIsOnboardingCompleted(true)
       router.push("/dashboard")
-      return
     }
+  }, [router])
 
-    // Add welcome notification
-    addNotification({
-      title: "Welcome to SnapAiFi! 🎉",
-      message: "Let's get you set up for financial success",
-      type: "info",
-      category: "onboarding",
-      read: false,
-    })
-  }, [router, addNotification])
-
-  const handleOnboardingComplete = () => {
-    setShowOnboarding(false)
-    router.push("/dashboard")
-  }
-
-  if (!showOnboarding) {
-    return null
+  if (isOnboardingCompleted) {
+    return null // Will redirect to dashboard
   }
 
   return <ComprehensiveOnboarding />
