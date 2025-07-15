@@ -5,7 +5,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { GlobalUnlockProvider } from "@/contexts/global-unlock-context"
 import { PortalProvider } from "@/contexts/portal-context"
-import { EnvironmentSidebar } from "@/components/sidebar/environment-sidebar"
+import { AutoRetractableSidebar } from "@/components/sidebar/auto-retractable-sidebar"
 import { CursorOrb } from "@/components/ui/cursor-orb"
 import { ConversationalGeniusOrb } from "@/components/genius-guide-orb/conversational-genius-orb"
 import { EcosystemProvider } from "@/contexts/ecosystem-context"
@@ -32,11 +32,11 @@ export default function RootLayout({
             <PortalProvider>
               <GlobalUnlockProvider>
                 <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-                  {/* Environment Sidebar */}
-                  <EnvironmentSidebar />
+                  {/* Auto Retractable Sidebar */}
+                  <AutoRetractableSidebar />
 
                   {/* Main Content */}
-                  <div className="ml-16 min-h-screen">{children}</div>
+                  <div className="pl-16 min-h-screen transition-all duration-300">{children}</div>
 
                   {/* Global UI Elements */}
                   <CursorOrb />
