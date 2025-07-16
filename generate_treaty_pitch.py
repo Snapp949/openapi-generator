@@ -1,6 +1,19 @@
 from fpdf import FPDF
+from pdfminer.high_level import extract_text
+import os
+
+def convert_pdf_to_txt(pdf_path, txt_path):
+    """Converts a PDF file to a plain text file."""
+    try:
+        text = extract_text(pdf_path)
+        with open(txt_path, "w", encoding="utf-8") as f:
+            f.write(text)
+        print(f"Converted PDF to TXT at: {txt_path}")
+    except Exception as e:
+        print(f"Error converting PDF to TXT: {e}")
 
 def create_generic_proposal_pdf():
+    """Generates a generic treaty and investment proposal PDF and converts it to TXT."""
     pdf = FPDF()
     pdf.add_page()
 
@@ -40,10 +53,19 @@ def create_generic_proposal_pdf():
     )
     pdf.multi_cell(0, 10, pitch_text)
 
-    # Save PDF
-    file_path = "Snap_Generic_Treaty_and_Investment_Proposal.pdf"
-    pdf.output(file_path)
-    return file_path
+    # Define file paths
+    pdf_file_name = "Snap_Generic_Treaty_and_Investment_Proposal.pdf"
+    txt_file_name = pdf_file_name.replace(".pdf", ".txt")
 
-file_path = create_generic_proposal_pdf()
-print(f"PDF created at: {file_path}")
+    # Save PDF
+    pdf.output(pdf_file_name)
+    print(f"PDF created at: {pdf_file_name}")
+
+    # Convert PDF to TXT
+    convert_pdf_to_txt(pdf_file_name, txt_file_name)
+
+    return pdf_file_name, txt_file_name
+
+# Execute the function and print paths
+pdf_path, txt_path = create_generic_proposal_pdf()
+print(f"Generated files: {pdf_path}, {txt_path}")
