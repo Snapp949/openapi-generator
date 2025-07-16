@@ -248,7 +248,7 @@ export default function CreditDashboard({ profile, lastUpdated, userId }: Credit
       <Card>
         <CardHeader>
           <CardTitle className="text-xl font-semibold">Credit Overview – User {userId}</CardTitle>
-          <p className="text-sm text-muted-foreground">Last updated: {new Date(lastUpdated).toLocaleString()}</p>
+          <CardDescription>Last updated: {new Date(lastUpdated).toLocaleString()}</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Stat label="FICO Score" value={ficoScore} />

@@ -381,7 +381,7 @@ export function Product360Modal({ isOpen, onClose, product }: Product360ModalPro
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
-                        className="flex-1 border-indigo-500/20 text-indigo-300 hover:bg-indigo-900/30"
+                        className="flex-1 border-indigo-500/20 text-indigo-300 hover:bg-indigo-900/30 bg-transparent"
                         onClick={() => setIsLiked(!isLiked)}
                       >
                         <Heart className={`w-4 h-4 mr-2 ${isLiked ? "fill-red-500 text-red-500" : ""}`} />
@@ -390,7 +390,7 @@ export function Product360Modal({ isOpen, onClose, product }: Product360ModalPro
 
                       <Button
                         variant="outline"
-                        className="flex-1 border-indigo-500/20 text-indigo-300 hover:bg-indigo-900/30"
+                        className="flex-1 border-indigo-500/20 text-indigo-300 hover:bg-indigo-900/30 bg-transparent"
                       >
                         <Share2 className="w-4 h-4 mr-2" />
                         Share
