@@ -2,18 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react"
-
-interface Product {
-  id: string
-  name: string
-  description: string
-  price: number
-  image: string
-  category: string
-  rating: number
-  stock: number
-  platforms: string[]
-}
+import type { Product } from "@/types/product"
 
 interface ProductComparisonContextType {
   comparisonProducts: Product[]

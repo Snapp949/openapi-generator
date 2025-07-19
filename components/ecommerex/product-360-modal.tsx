@@ -12,21 +12,7 @@ import { Slider } from "@/components/ui/slider"
 import { Card, CardContent } from "@/components/ui/card"
 import { HolographicLabel } from "./holographic-label"
 import Image from "next/image"
-
-interface Product {
-  id: string
-  name: string
-  description: string
-  price: number
-  image: string
-  category: string
-  rating: number
-  stock: number
-  platforms: string[]
-  isHolographic?: boolean
-  holographicFeatures?: string[]
-  has360View?: boolean
-}
+import type { Product } from "@/types/product"
 
 interface Product360ModalProps {
   isOpen: boolean

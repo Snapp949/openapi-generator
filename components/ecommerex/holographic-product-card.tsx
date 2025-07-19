@@ -10,21 +10,7 @@ import { HolographicLabel } from "./holographic-label"
 import { Product360Modal } from "./product-360-modal"
 import Image from "next/image"
 import { useProductComparison } from "@/contexts/product-comparison-context"
-
-interface Product {
-  id: string
-  name: string
-  description: string
-  price: number
-  image: string
-  category: string
-  rating: number
-  stock: number
-  platforms: string[]
-  isHolographic?: boolean
-  holographicFeatures?: string[]
-  has360View?: boolean
-}
+import type { Product } from "@/types/product"
 
 interface HolographicProductCardProps {
   product: Product

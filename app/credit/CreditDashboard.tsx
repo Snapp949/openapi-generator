@@ -53,15 +53,18 @@ export interface CreditProfile {
   negativeMarks: number
   creditLimit: number
   balance: number
+  lastUpdated: string
+  scoreChange: number
+  averageAccountAge: number
+  creditInquiries: number
+  totalAccounts: number
 }
 
 interface CreditDashboardProps {
-  profile: CreditProfile
-  lastUpdated: string
   userId: string
 }
 
-export default function CreditDashboard({ profile, lastUpdated, userId }: CreditDashboardProps) {
+export default function CreditDashboard({ userId }: CreditDashboardProps) {
   const {
     creditProfile,
     creditHistory,
@@ -142,7 +145,7 @@ export default function CreditDashboard({ profile, lastUpdated, userId }: Credit
     negativeMarks,
     creditLimit,
     balance,
-  } = profile
+  } = creditProfile
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -248,7 +251,9 @@ export default function CreditDashboard({ profile, lastUpdated, userId }: Credit
       <Card>
         <CardHeader>
           <CardTitle className="text-xl font-semibold">Credit Overview – User {userId}</CardTitle>
-          <CardDescription>Last updated: {new Date(lastUpdated).toLocaleString()}</CardDescription>
+          <p className="text-sm text-muted-foreground">
+            Last updated: {new Date(creditProfile.lastUpdated).toLocaleString()}
+          </p>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Stat label="FICO Score" value={ficoScore} />
