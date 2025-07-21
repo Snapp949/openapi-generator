@@ -362,7 +362,7 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
   // Handle mouse enter/leave
   const handleMouseEnter = () => {
     setIsHovered(true)
-    setIsExpanded(true)
+    setIsExpanded(true) // Immediately expand on hover
     if (autoCollapseTimer) {
       clearTimeout(autoCollapseTimer)
     }
@@ -371,6 +371,7 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
   const handleMouseLeave = () => {
     setIsHovered(false)
     if (!isPinned) {
+      // Only auto-collapse if not pinned
       const timer = setTimeout(() => {
         setIsExpanded(false)
       }, 500) // Small delay before collapsing
@@ -473,7 +474,32 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
           </AnimatePresence>
 
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setIsPinned(!isPinned)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => {
+                setIsPinned((prev) => {
+                  const newPinnedState = !prev
+                  if (newPinnedState) {
+                    // If pinning, ensure it's expanded and clear any collapse timer
+                    setIsExpanded(true)
+                    if (autoCollapseTimer) {
+                      clearTimeout(autoCollapseTimer)
+                    }
+                  } else {
+                    // If unpinning, and not currently hovered, start auto-collapse
+                    if (!isHovered) {
+                      const timer = setTimeout(() => {
+                        setIsExpanded(false)
+                      }, 500)
+                      setAutoCollapseTimer(timer)
+                    }
+                  }
+                  return newPinnedState
+                })
+              }}
+            >
               {isPinned ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </Button>
             {isExpanded && (
