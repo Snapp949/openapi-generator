@@ -1,60 +1,93 @@
 "use client"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
-import type { SidebarItem } from "./auto-retractable-sidebar.types"
+import {
+  Home,
+  BarChart3,
+  PieChart,
+  Receipt,
+  Calculator,
+  TrendingUp,
+  Zap,
+  Coins,
+  Building,
+  Key,
+  Briefcase,
+  CreditCard,
+  ShoppingBag,
+  Package,
+  Settings,
+  User,
+  LayoutDashboard,
+  DollarSign,
+  ShoppingCart,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
+import type { NavigationItem } from "./auto-retractable-sidebar.types"
 
 interface AutoRetractableSidebarItemProps {
-  item: SidebarItem
+  item: NavigationItem
   isExpanded: boolean
+}
+
+const iconMap = {
+  Home,
+  BarChart3,
+  PieChart,
+  Receipt,
+  Calculator,
+  TrendingUp,
+  Zap,
+  Coins,
+  Building,
+  Key,
+  Briefcase,
+  CreditCard,
+  ShoppingBag,
+  Package,
+  Settings,
+  User,
+  LayoutDashboard,
+  DollarSign,
+  ShoppingCart,
 }
 
 export function AutoRetractableSidebarItem({ item, isExpanded }: AutoRetractableSidebarItemProps) {
   const pathname = usePathname()
-  const isActive = pathname === item.href
+  const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
 
-  const ItemIcon = item.icon
+  const IconComponent = iconMap[item.icon as keyof typeof iconMap] || Home
 
-  const content = (
-    <div
-      className={cn(
-        "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200",
-        "hover:bg-slate-700 hover:text-white",
-        isActive ? "bg-blue-600 text-white" : "text-slate-300 hover:text-white",
-        !isExpanded && "justify-center px-2",
-      )}
+  const buttonContent = (
+    <Button
+      variant={isActive ? "secondary" : "ghost"}
+      className={`
+        w-full justify-start h-10 px-3
+        ${isExpanded ? "justify-start" : "justify-center px-0"}
+        ${isActive ? "bg-secondary text-secondary-foreground" : ""}
+      `}
+      asChild
     >
-      {ItemIcon && <ItemIcon className={cn("h-5 w-5 flex-shrink-0", isActive ? "text-white" : "text-slate-400")} />}
-
-      {isExpanded && (
-        <>
-          <span className="font-medium truncate">{item.label}</span>
-          {item.badge && (
-            <Badge variant={item.badge.variant || "secondary"} className="ml-auto text-xs">
-              {item.badge.content}
-            </Badge>
-          )}
-        </>
-      )}
-    </div>
+      <Link href={item.href}>
+        <IconComponent className={`h-4 w-4 ${isExpanded ? "mr-3" : ""}`} />
+        {isExpanded && <span className="transition-opacity duration-200 opacity-100">{item.label}</span>}
+      </Link>
+    </Button>
   )
 
-  if (item.href) {
+  if (!isExpanded) {
     return (
-      <Link href={item.href} className="block">
-        {content}
-      </Link>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>{buttonContent}</TooltipTrigger>
+          <TooltipContent side="right" className="ml-2">
+            {item.label}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     )
   }
 
-  if (item.onClick) {
-    return (
-      <button onClick={item.onClick} className="w-full text-left">
-        {content}
-      </button>
-    )
-  }
-
-  return <div>{content}</div>
+  return buttonContent
 }

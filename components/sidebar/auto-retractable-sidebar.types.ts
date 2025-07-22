@@ -14,3 +14,24 @@ export interface SidebarItem {
   badge?: SidebarBadge
   children?: SidebarItem[]
 }
+
+export interface NavigationItem {
+  id: string
+  label: string
+  href: string
+  icon: string
+  category: string
+  badge?: string | number
+  isNew?: boolean
+}
+
+export interface SidebarCategory {
+  id: string
+  label: string
+  icon: string
+}
+
+export interface AutoRetractableSidebarProps {
+  navigationItems?: NavigationItem[]
+  className?: string
+}
