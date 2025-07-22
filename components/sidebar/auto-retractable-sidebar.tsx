@@ -28,20 +28,22 @@ import {
   PinOff,
   Tent,
 } from "lucide-react"
+
+/* -------- shadcn / ui imports -------- */
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
-  Button,
-  Badge,
-  Input,
-  ScrollArea,
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui"
+} from "@/components/ui/dropdown-menu"
+/* ------------------------------------- */
+
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 
