@@ -1,8 +1,9 @@
 "use client"
 
-import type React from "react"
+import React from "react"
+
+import type { ReactElement } from "react"
 import { useState, useEffect, useRef } from "react"
-import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -16,32 +17,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Pin, PinOff } from "lucide-react"
+import type { SidebarItem } from "./auto-retractable-sidebar.types"
 import {
   Search,
   ChevronDown,
-  Home,
-  CreditCard,
-  TrendingUp,
-  Building,
-  ShoppingBag,
-  Briefcase,
-  Shield,
   Settings,
   Bell,
   User,
   LogOut,
   Bookmark,
-  Zap,
   Crown,
   MoreHorizontal,
   ExternalLink,
-  Eye,
   EyeOff,
-  Sparkles,
-  BarChart3,
-  Menu,
-  X,
-  Tent,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
@@ -50,7 +39,7 @@ interface NavigationItem {
   id: string
   label: string
   href: string
-  icon: React.ElementType
+  icon: ReactElement
   badge?: string
   isActive?: boolean
   children?: NavigationItem[]
@@ -63,7 +52,11 @@ interface NavigationItem {
 }
 
 interface AutoRetractableSidebarProps {
+  items?: SidebarItem[]
   className?: string
+  collapsedWidth?: number
+  expandedWidth?: number
+  autoCollapseDelay?: number
 }
 
 // Default user profile and portal config to prevent null errors
@@ -87,20 +80,18 @@ const defaultPortalConfig = {
   },
 }
 
-export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProps) {
+export function AutoRetractableSidebar({
+  items = [],
+  className,
+  collapsedWidth = 64,
+  expandedWidth = 256,
+  autoCollapseDelay = 300,
+}: AutoRetractableSidebarProps) {
   const [isExpanded, setIsExpanded] = useState(false)
-  const [isHovered, setIsHovered] = useState(false)
   const [isPinned, setIsPinned] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [expandedCategories, setExpandedCategories] = useState<string[]>(["essential", "financial"])
-  const [bookmarkedItems, setBookmarkedItems] = useState<string[]>([])
-  const [hiddenItems, setHiddenItems] = useState<string[]>([])
-  const [recentItems, setRecentItems] = useState<string[]>([])
-  const [autoCollapseTimer, setAutoCollapseTimer] = useState<NodeJS.Timeout | null>(null)
-
+  const [isHovering, setIsHovering] = useState(false)
   const sidebarRef = useRef<HTMLDivElement>(null)
-  const pathname = usePathname()
-  const router = useRouter()
+  const timeoutRef = useRef<NodeJS.Timeout>()
 
   // Safe context usage with fallbacks
   const userProfile = defaultUserProfile
@@ -108,353 +99,48 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
   const portalConfig = defaultPortalConfig
   const getUnreadCount = () => 0 // Default to 0 notifications
 
-  const navigationItems: NavigationItem[] = [
-    // Essential
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      href: "/dashboard",
-      icon: Home,
-      category: "essential",
-      description: "Main dashboard overview",
-    },
-    {
-      id: "transactions",
-      label: "Transactions",
-      href: "/dashboard/transactions",
-      icon: CreditCard,
-      category: "essential",
-      description: "View and manage transactions",
-      badge: "12",
-    },
-    {
-      id: "analytics",
-      label: "Analytics",
-      href: "/dashboard/analytics",
-      icon: TrendingUp,
-      category: "essential",
-      description: "Financial analytics and insights",
-    },
-
-    // Financial
-    {
-      id: "credit-suite",
-      label: "Credit Suite",
-      href: "/credit-suite",
-      icon: CreditCard,
-      category: "financial",
-      description: "AI-powered credit optimization",
-      isPremium: true,
-      children: [
-        {
-          id: "credit-monitoring",
-          label: "Credit Monitoring",
-          href: "/credit-suite/monitoring",
-          icon: Shield,
-          category: "financial",
-        },
-        {
-          id: "credit-optimization",
-          label: "Credit Optimization",
-          href: "/credit-suite/optimization",
-          icon: Zap,
-          category: "financial",
-          isNew: true,
-        },
-      ],
-    },
-    {
-      id: "snap-dax",
-      label: "SNAP-DAX Trading",
-      href: "/dashboard/snap-dax",
-      icon: TrendingUp,
-      category: "financial",
-      description: "Digital asset trading platform",
-      badge: "Live",
-      children: [
-        {
-          id: "trading-dashboard",
-          label: "Trading Dashboard",
-          href: "/dashboard/snap-dax",
-          icon: TrendingUp,
-          category: "financial",
-        },
-        {
-          id: "portfolio",
-          label: "Portfolio",
-          href: "/dashboard/portfolio",
-          icon: Eye,
-          category: "financial",
-        },
-      ],
-    },
-    {
-      id: "financial-planning",
-      label: "Financial Planning",
-      href: "/dashboard/financial-planning",
-      icon: Eye,
-      category: "financial",
-      description: "Comprehensive financial planning tools",
-      children: [
-        {
-          id: "budget-calculator",
-          label: "Budget Calculator",
-          href: "/dashboard/financial-planning/budget-calculator",
-          icon: Eye,
-          category: "financial",
-        },
-        {
-          id: "investment-planner",
-          label: "Investment Planner",
-          href: "/dashboard/financial-planning/investment-planner",
-          icon: Eye,
-          category: "financial",
-        },
-      ],
-    },
-    {
-      id: "snap-wallet",
-      label: "Snap Wallet",
-      href: "/snap-wallet",
-      icon: CreditCard,
-      category: "financial",
-      description: "Unified credit card management",
-      isNew: true,
-    },
-
-    // Investment
-    {
-      id: "real-estate",
-      label: "Real Estate Hub",
-      href: "/real-estate",
-      icon: Building,
-      category: "investment",
-      description: "Property investment platform",
-      children: [
-        {
-          id: "property-search",
-          label: "Property Search",
-          href: "/real-estate",
-          icon: Search,
-          category: "investment",
-        },
-        {
-          id: "loan-center",
-          label: "Loan Center",
-          href: "/citizen/loan-center",
-          icon: CreditCard,
-          category: "investment",
-          badge: "50yr",
-        },
-      ],
-    },
-    {
-      id: "snap-rentals",
-      label: "Snap Rentals",
-      href: "/snap-rentals",
-      icon: Tent,
-      category: "investment",
-      description: "Airbnb-like property rentals",
-      isNew: true,
-    },
-
-    // Commerce
-    {
-      id: "ecommerex",
-      label: "EcommereX",
-      href: "/dashboard/ecommerex/holographic-products",
-      icon: ShoppingBag,
-      category: "commerce",
-      description: "Holographic shopping experience",
-      isNew: true,
-      children: [
-        {
-          id: "holographic-products",
-          label: "Holographic Products",
-          href: "/dashboard/ecommerex/holographic-products",
-          icon: Sparkles,
-          category: "commerce",
-        },
-        {
-          id: "marketplace",
-          label: "Marketplace",
-          href: "/commerce/marketplace",
-          icon: ShoppingBag,
-          category: "commerce",
-        },
-      ],
-    },
-
-    // Business
-    {
-      id: "business-suite",
-      label: "Business Suite",
-      href: "/business-suite",
-      icon: Briefcase,
-      category: "business",
-      description: "Comprehensive business management",
-      isPremium: true,
-      children: [
-        {
-          id: "business-dashboard",
-          label: "Business Dashboard",
-          href: "/business-suite",
-          icon: BarChart3,
-          category: "business",
-        },
-        {
-          id: "compliance",
-          label: "Compliance",
-          href: "/institutional/compliance",
-          icon: Shield,
-          category: "business",
-        },
-      ],
-    },
-
-    // Legal
-    {
-      id: "legal-compliance",
-      label: "Legal & Compliance",
-      href: "/legal",
-      icon: Shield,
-      category: "legal",
-      description: "Legal documentation and compliance",
-      children: [
-        {
-          id: "legal-documents",
-          label: "Legal Documents",
-          href: "/legal",
-          icon: Eye,
-          category: "legal",
-        },
-        {
-          id: "diplomatic-immunity",
-          label: "Diplomatic Immunity",
-          href: "/legal/diplomatic-immunity",
-          icon: Crown,
-          category: "legal",
-          isPremium: true,
-        },
-      ],
-    },
-
-    // Innovation
-    {
-      id: "beta-lab",
-      label: "Beta Laboratory",
-      href: "/beta-lab",
-      icon: Zap,
-      category: "innovation",
-      description: "Experimental features and tools",
-      isNew: true,
-      children: [
-        {
-          id: "quantum-features",
-          label: "Quantum Features",
-          href: "/beta-lab/quantum",
-          icon: Sparkles,
-          category: "innovation",
-        },
-      ],
-    },
-  ]
-
-  const categories = [
-    { id: "essential", label: "Essential", icon: Home },
-    { id: "financial", label: "Financial", icon: CreditCard },
-    { id: "investment", label: "Investment", icon: Building },
-    { id: "commerce", label: "Commerce", icon: ShoppingBag },
-    { id: "business", label: "Business", icon: Briefcase },
-    { id: "legal", label: "Legal", icon: Shield },
-    { id: "innovation", label: "Innovation", icon: Zap },
-  ]
-
-  // Auto-collapse logic
-  useEffect(() => {
-    if (isExpanded && !isPinned && !isHovered) {
-      const timer = setTimeout(() => {
-        setIsExpanded(false)
-      }, 3000)
-
-      setAutoCollapseTimer(timer)
-      return () => clearTimeout(timer)
-    }
-  }, [isExpanded, isPinned, isHovered])
-
-  // Handle mouse enter/leave
+  // Handle mouse enter
   const handleMouseEnter = () => {
-    setIsHovered(true)
+    setIsHovering(true)
     setIsExpanded(true)
-    if (autoCollapseTimer) {
-      clearTimeout(autoCollapseTimer)
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
     }
   }
 
+  // Handle mouse leave
   const handleMouseLeave = () => {
-    setIsHovered(false)
+    setIsHovering(false)
     if (!isPinned) {
-      const timer = setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         setIsExpanded(false)
-      }, 500)
-      setAutoCollapseTimer(timer)
+      }, autoCollapseDelay)
     }
   }
 
-  // Filter items based on search and visibility
-  const filteredItems = navigationItems.filter((item) => {
-    if (hiddenItems.includes(item.id)) return false
-    if (searchQuery) {
-      return (
-        item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+  // Toggle pin state
+  const togglePin = () => {
+    setIsPinned(!isPinned)
+    if (!isPinned) {
+      setIsExpanded(true)
     }
-    return true
-  })
+  }
 
-  // Group items by category
-  const groupedItems = filteredItems.reduce(
-    (acc, item) => {
-      if (!acc[item.category]) {
-        acc[item.category] = []
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
       }
-      acc[item.category].push(item)
-      return acc
-    },
-    {} as Record<string, NavigationItem[]>,
-  )
-
-  const toggleCategory = (categoryId: string) => {
-    setExpandedCategories((prev) =>
-      prev.includes(categoryId) ? prev.filter((id) => id !== categoryId) : [...prev, categoryId],
-    )
-  }
-
-  const toggleBookmark = (itemId: string) => {
-    setBookmarkedItems((prev) => (prev.includes(itemId) ? prev.filter((id) => id !== itemId) : [...prev, itemId]))
-  }
-
-  const toggleHidden = (itemId: string) => {
-    setHiddenItems((prev) => (prev.includes(itemId) ? prev.filter((id) => id !== itemId) : [...prev, itemId]))
-  }
-
-  const handleNavigation = (href: string, itemId: string) => {
-    router.push(href)
-    setRecentItems((prev) => [itemId, ...prev.filter((id) => id !== itemId)].slice(0, 5))
-
-    if (!isPinned) {
-      setTimeout(() => {
-        setIsExpanded(false)
-      }, 1000)
     }
-  }
+  }, [])
 
-  const isItemActive = (href: string) => {
-    return pathname === href || pathname.startsWith(href + "/")
-  }
-
-  const sidebarWidth = isExpanded ? "320px" : "64px"
+  // Keep expanded if pinned
+  useEffect(() => {
+    if (isPinned) {
+      setIsExpanded(true)
+    }
+  }, [isPinned])
 
   return (
     <motion.div
@@ -463,8 +149,8 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
         "fixed left-0 top-0 h-full bg-black/20 backdrop-blur-xl border-r border-white/10 z-50 flex flex-col",
         className,
       )}
-      style={{ width: sidebarWidth }}
-      animate={{ width: sidebarWidth }}
+      style={{ width: isExpanded ? expandedWidth : collapsedWidth }}
+      animate={{ width: isExpanded ? expandedWidth : collapsedWidth }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -506,22 +192,21 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
                   const newPinnedState = !prev
                   if (newPinnedState) {
                     setIsExpanded(true)
-                    if (autoCollapseTimer) {
-                      clearTimeout(autoCollapseTimer)
+                    if (timeoutRef.current) {
+                      clearTimeout(timeoutRef.current)
                     }
                   } else {
-                    if (!isHovered) {
-                      const timer = setTimeout(() => {
+                    if (!isHovering) {
+                      timeoutRef.current = setTimeout(() => {
                         setIsExpanded(false)
-                      }, 500)
-                      setAutoCollapseTimer(timer)
+                      }, autoCollapseDelay)
                     }
                   }
                   return newPinnedState
                 })
               }}
             >
-              {isPinned ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
             </Button>
             {isExpanded && (
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -548,8 +233,8 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 text-white/50" />
                 <Input
                   placeholder="Search platforms..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  value=""
+                  onChange={() => {}}
                   className="pl-9 h-8 bg-white/10 border-white/20 text-sm text-white placeholder:text-white/50"
                 />
               </div>
@@ -562,27 +247,26 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-6">
           {/* Bookmarked Items */}
-          {bookmarkedItems.length > 0 && isExpanded && (
+          {items.filter((item) => item.isBookmarked).length > 0 && isExpanded && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
               <h3 className="text-xs font-medium text-white/50 uppercase tracking-wider flex items-center gap-2">
                 <Bookmark className="h-3 w-3" />
                 Bookmarked
               </h3>
               <div className="space-y-1">
-                {bookmarkedItems.map((itemId) => {
-                  const item = navigationItems.find((nav) => nav.id === itemId)
-                  if (!item) return null
-                  return (
+                {items
+                  .filter((item) => item.isBookmarked)
+                  .map((item) => (
                     <Button
                       key={item.id}
                       variant="ghost"
                       size="sm"
                       className={`w-full justify-start h-8 ${
-                        isItemActive(item.href) ? "bg-purple-500/20 text-purple-400" : "text-white/70 hover:text-white"
+                        item.isActive ? "bg-purple-500/20 text-purple-400" : "text-white/70 hover:text-white"
                       }`}
-                      onClick={() => handleNavigation(item.href, item.id)}
+                      onClick={() => (window.location.href = item.href)}
                     >
-                      <item.icon className="h-3 w-3 mr-2" />
+                      {item.icon && <item.icon className="h-3 w-3 mr-2" />}
                       <span className="text-sm">{item.label}</span>
                       {item.badge && (
                         <Badge variant="secondary" className="ml-auto text-xs">
@@ -590,23 +274,27 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
                         </Badge>
                       )}
                     </Button>
-                  )
-                })}
+                  ))}
               </div>
               <Separator className="bg-white/10" />
             </motion.div>
           )}
 
           {/* Categories */}
-          {categories.map((category) => {
-            const categoryItems = groupedItems[category.id] || []
-            if (categoryItems.length === 0) return null
-
-            const isExpanded_cat = expandedCategories.includes(category.id)
-
-            return (
-              <div key={category.id} className="space-y-2">
-                <Collapsible open={isExpanded_cat} onOpenChange={() => toggleCategory(category.id)}>
+          {items
+            .reduce(
+              (acc, item) => {
+                if (!acc[item.category]) {
+                  acc[item.category] = []
+                }
+                acc[item.category].push(item)
+                return acc
+              },
+              {} as Record<string, SidebarItem[]>,
+            )
+            .map((categoryItems, category) => (
+              <div key={category} className="space-y-2">
+                <Collapsible open={categoryItems.some((item) => item.isActive)} onOpenChange={() => {}}>
                   <CollapsibleTrigger asChild>
                     <Button
                       variant="ghost"
@@ -614,11 +302,13 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
                       className="w-full justify-between h-8 text-xs font-medium text-white/50 uppercase tracking-wider hover:text-white/70"
                     >
                       <div className="flex items-center gap-2">
-                        <category.icon className="h-3 w-3" />
-                        {isExpanded && <span>{category.label}</span>}
+                        {categoryItems[0].icon && React.createElement(categoryItems[0].icon, { className: "h-3 w-3" })}
+                        {isExpanded && <span>{category}</span>}
                       </div>
                       {isExpanded && (
-                        <ChevronDown className={`h-3 w-3 transition-transform ${isExpanded_cat ? "rotate-180" : ""}`} />
+                        <ChevronDown
+                          className={`h-3 w-3 transition-transform ${categoryItems.some((item) => item.isActive) ? "rotate-180" : ""}`}
+                        />
                       )}
                     </Button>
                   </CollapsibleTrigger>
@@ -637,13 +327,13 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
                               variant="ghost"
                               size="sm"
                               className={`w-full justify-start h-8 ${
-                                isItemActive(item.href)
+                                item.isActive
                                   ? "bg-purple-500/20 text-purple-400"
                                   : "text-white/70 hover:text-white hover:bg-white/5"
                               }`}
-                              onClick={() => handleNavigation(item.href, item.id)}
+                              onClick={() => (window.location.href = item.href)}
                             >
-                              <item.icon className="h-3 w-3 mr-2 flex-shrink-0" />
+                              {item.icon && <item.icon className="h-3 w-3 mr-2 flex-shrink-0" />}
                               {isExpanded && (
                                 <>
                                   <span className="text-sm flex-1 text-left truncate">{item.label}</span>
@@ -674,16 +364,16 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="w-48">
-                                    <DropdownMenuItem onClick={() => handleNavigation(item.href, item.id)}>
+                                    <DropdownMenuItem onClick={() => (window.location.href = item.href)}>
                                       <ExternalLink className="h-3 w-3 mr-2" />
                                       Open
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => toggleBookmark(item.id)}>
+                                    <DropdownMenuItem onClick={() => {}}>
                                       <Bookmark className="h-3 w-3 mr-2" />
-                                      {bookmarkedItems.includes(item.id) ? "Remove Bookmark" : "Add Bookmark"}
+                                      {item.isBookmarked ? "Remove Bookmark" : "Add Bookmark"}
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => toggleHidden(item.id)}>
+                                    <DropdownMenuItem onClick={() => {}}>
                                       <EyeOff className="h-3 w-3 mr-2" />
                                       Hide
                                     </DropdownMenuItem>
@@ -702,13 +392,13 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
                                   variant="ghost"
                                   size="sm"
                                   className={`w-full justify-start h-7 text-xs ${
-                                    isItemActive(child.href)
+                                    child.isActive
                                       ? "bg-purple-500/20 text-purple-400"
                                       : "text-white/60 hover:text-white hover:bg-white/5"
                                   }`}
-                                  onClick={() => handleNavigation(child.href, child.id)}
+                                  onClick={() => (window.location.href = child.href)}
                                 >
-                                  <child.icon className="h-3 w-3 mr-2" />
+                                  {child.icon && <child.icon className="h-3 w-3 mr-2" />}
                                   <span className="flex-1 text-left">{child.label}</span>
                                   {child.isNew && (
                                     <Badge variant="secondary" className="text-xs bg-green-500/20 text-green-400">
@@ -730,8 +420,7 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
                   </CollapsibleContent>
                 </Collapsible>
               </div>
-            )
-          })}
+            ))}
         </div>
       </ScrollArea>
 
@@ -757,11 +446,11 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => router.push("/settings")}>
+                <DropdownMenuItem onClick={() => (window.location.href = "/settings")}>
                   <Settings className="h-3 w-3 mr-2" />
                   Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/profile")}>
+                <DropdownMenuItem onClick={() => (window.location.href = "/profile")}>
                   <User className="h-3 w-3 mr-2" />
                   Profile
                 </DropdownMenuItem>

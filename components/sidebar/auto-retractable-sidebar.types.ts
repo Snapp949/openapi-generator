@@ -1,19 +1,16 @@
-import type React from "react"
+import type { LucideIcon } from "lucide-react"
 
-/** Props accepted by the sidebar wrapper */
-export interface AutoRetractableSidebarProps {
-  /** Collapse state passed down from the parent component */
-  isCollapsed?: boolean
+export interface SidebarBadge {
+  content: string | number
+  variant?: "default" | "secondary" | "destructive" | "outline"
 }
 
-/** Props for each individual navigation item */
-export interface AutoRetractableSidebarItemProps {
-  /** Text label shown next to the icon */
-  title: string
-  /** Lucide‐React icon component */
-  icon: React.ElementType
-  /** Where the item should navigate */
-  url: string
-  /** Whether the sidebar is currently collapsed */
-  isCollapsed?: boolean
+export interface SidebarItem {
+  id?: string
+  label: string
+  icon?: LucideIcon
+  href?: string
+  onClick?: () => void
+  badge?: SidebarBadge
+  children?: SidebarItem[]
 }
