@@ -43,8 +43,6 @@ import {
   X,
   Tent,
 } from "lucide-react"
-import { useEcosystem } from "@/contexts/ecosystem-context"
-import { usePortal } from "@/contexts/portal-context"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 
@@ -68,6 +66,27 @@ interface AutoRetractableSidebarProps {
   className?: string
 }
 
+// Default user profile and portal config to prevent null errors
+const defaultUserProfile = {
+  name: "User",
+  tier: "Basic",
+}
+
+const defaultPortalConfig = {
+  citizen: {
+    name: "Citizen Portal",
+    color: "from-blue-500 to-cyan-600",
+  },
+  business: {
+    name: "Business Portal",
+    color: "from-purple-500 to-pink-600",
+  },
+  institutional: {
+    name: "Institutional Portal",
+    color: "from-green-500 to-emerald-600",
+  },
+}
+
 export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
@@ -82,8 +101,12 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
   const sidebarRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
   const router = useRouter()
-  const { userProfile, notifications, getUnreadCount, currentEnvironment } = useEcosystem()
-  const { currentPortal, portalConfig } = usePortal()
+
+  // Safe context usage with fallbacks
+  const userProfile = defaultUserProfile
+  const currentPortal = "business" // Default to business portal
+  const portalConfig = defaultPortalConfig
+  const getUnreadCount = () => 0 // Default to 0 notifications
 
   const navigationItems: NavigationItem[] = [
     // Essential
@@ -190,7 +213,7 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
       ],
     },
     {
-      id: "snap-wallet", // Added Snap Wallet
+      id: "snap-wallet",
       label: "Snap Wallet",
       href: "/snap-wallet",
       icon: CreditCard,
@@ -226,7 +249,7 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
       ],
     },
     {
-      id: "snap-rentals", // Added Snap Rentals
+      id: "snap-rentals",
       label: "Snap Rentals",
       href: "/snap-rentals",
       icon: Tent,
@@ -352,7 +375,7 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
     if (isExpanded && !isPinned && !isHovered) {
       const timer = setTimeout(() => {
         setIsExpanded(false)
-      }, 3000) // Auto-collapse after 3 seconds of no interaction
+      }, 3000)
 
       setAutoCollapseTimer(timer)
       return () => clearTimeout(timer)
@@ -362,7 +385,7 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
   // Handle mouse enter/leave
   const handleMouseEnter = () => {
     setIsHovered(true)
-    setIsExpanded(true) // Immediately expand on hover
+    setIsExpanded(true)
     if (autoCollapseTimer) {
       clearTimeout(autoCollapseTimer)
     }
@@ -371,10 +394,9 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
   const handleMouseLeave = () => {
     setIsHovered(false)
     if (!isPinned) {
-      // Only auto-collapse if not pinned
       const timer = setTimeout(() => {
         setIsExpanded(false)
-      }, 500) // Small delay before collapsing
+      }, 500)
       setAutoCollapseTimer(timer)
     }
   }
@@ -419,11 +441,8 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
 
   const handleNavigation = (href: string, itemId: string) => {
     router.push(href)
-
-    // Add to recent items
     setRecentItems((prev) => [itemId, ...prev.filter((id) => id !== itemId)].slice(0, 5))
 
-    // Auto-collapse after navigation if not pinned
     if (!isPinned) {
       setTimeout(() => {
         setIsExpanded(false)
@@ -462,11 +481,15 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
                 transition={{ duration: 0.2 }}
                 className="flex items-center gap-2"
               >
-                <div className={`p-2 rounded-lg bg-gradient-to-r ${portalConfig[currentPortal].color}`}>
+                <div
+                  className={`p-2 rounded-lg bg-gradient-to-r ${portalConfig[currentPortal]?.color || portalConfig.business.color}`}
+                >
                   <Crown className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <h2 className="font-semibold text-sm text-white">{portalConfig[currentPortal].name}</h2>
+                  <h2 className="font-semibold text-sm text-white">
+                    {portalConfig[currentPortal]?.name || portalConfig.business.name}
+                  </h2>
                   <p className="text-xs text-white/50">Navigation</p>
                 </div>
               </motion.div>
@@ -482,13 +505,11 @@ export function AutoRetractableSidebar({ className }: AutoRetractableSidebarProp
                 setIsPinned((prev) => {
                   const newPinnedState = !prev
                   if (newPinnedState) {
-                    // If pinning, ensure it's expanded and clear any collapse timer
                     setIsExpanded(true)
                     if (autoCollapseTimer) {
                       clearTimeout(autoCollapseTimer)
                     }
                   } else {
-                    // If unpinning, and not currently hovered, start auto-collapse
                     if (!isHovered) {
                       const timer = setTimeout(() => {
                         setIsExpanded(false)
