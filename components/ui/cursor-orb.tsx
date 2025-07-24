@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { Sparkles, Star, Zap } from "lucide-react"
 import { motion } from "framer-motion"
 import { cn } from "@/lib/utils"
@@ -22,35 +22,38 @@ export function CursorOrb({ enabled = true }: CursorOrbProps) {
   const [isVisible, setIsVisible] = useState(false)
   const trailIdRef = useRef(0)
 
+  // Use useCallback to memoize event handlers for stable references
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    const newPosition = { x: e.clientX, y: e.clientY }
+    setMousePosition(newPosition)
+    setIsVisible(true)
+
+    const newTrailPoint: TrailPoint = {
+      x: e.clientX,
+      y: e.clientY,
+      id: trailIdRef.current++,
+      timestamp: Date.now(),
+    }
+
+    setTrail((prevTrail) => {
+      const updatedTrail = [...prevTrail, newTrailPoint]
+      return updatedTrail.slice(-15) // Keep only the last 15 trail points
+    })
+  }, []) // No dependencies needed as state setters use functional updates
+
+  const handleMouseLeave = useCallback(() => {
+    setIsVisible(false)
+  }, [])
+
+  const handleMouseEnter = useCallback(() => {
+    setIsVisible(true)
+  }, [])
+
   useEffect(() => {
-    if (!enabled) return
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const newPosition = { x: e.clientX, y: e.clientY }
-      setMousePosition(newPosition)
-      setIsVisible(true)
-
-      // Add new trail point
-      const newTrailPoint: TrailPoint = {
-        x: e.clientX,
-        y: e.clientY,
-        id: trailIdRef.current++,
-        timestamp: Date.now(),
-      }
-
-      setTrail((prevTrail) => {
-        const updatedTrail = [...prevTrail, newTrailPoint]
-        // Keep only the last 15 trail points
-        return updatedTrail.slice(-15)
-      })
-    }
-
-    const handleMouseLeave = () => {
+    if (!enabled) {
+      setTrail([]) // Clear trail when disabled
       setIsVisible(false)
-    }
-
-    const handleMouseEnter = () => {
-      setIsVisible(true)
+      return
     }
 
     document.addEventListener("mousemove", handleMouseMove)
@@ -69,14 +72,14 @@ export function CursorOrb({ enabled = true }: CursorOrbProps) {
       document.removeEventListener("mouseenter", handleMouseEnter)
       clearInterval(trailCleanup)
     }
-  }, [enabled])
+  }, [enabled, handleMouseMove, handleMouseLeave, handleMouseEnter]) // Add all stable callbacks to dependencies
 
   if (!enabled || !isVisible) return null
 
   return (
     <div className={cn("fixed inset-0 pointer-events-none z-[10000]", "")}>
       {/* Trail Points */}
-      {trail.map((point, index) => {
+      {trail.map((point) => {
         const age = Date.now() - point.timestamp
         const opacity = Math.max(0, 1 - age / 1000)
         const scale = Math.max(0.1, 1 - age / 1000)
@@ -84,9 +87,6 @@ export function CursorOrb({ enabled = true }: CursorOrbProps) {
         return (
           <motion.div
             key={point.id}
-            initial={{ opacity: 0.8, scale: 1 }}
-            animate={{ opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
             className="absolute"
             style={{
               left: point.x - 4,
@@ -94,6 +94,7 @@ export function CursorOrb({ enabled = true }: CursorOrbProps) {
               opacity,
               transform: `scale(${scale})`,
             }}
+            // Removed animate and transition props to avoid conflict with dynamic style updates
           >
             <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full" />
           </motion.div>
