@@ -672,28 +672,27 @@ export function EcosystemProvider({ children }: { children: React.ReactNode }) {
     setNavigationHistory((prev) => [path, ...prev.filter((p) => p !== path)].slice(0, 20))
   }, [])
 
-  const trackEvent = useCallback(
-    (event: string, properties?: Record<string, any>) => {
-      // Analytics tracking
-      console.log("Event tracked:", event, properties)
+  const trackEvent = useCallback((event: string, properties?: Record<string, any>) => {
+    // Analytics tracking
+    console.log("Event tracked:", event, properties)
 
-      // Update user stats
-      if (userProfile) {
-        const updatedStats = { ...userProfile.stats }
+    // Update user stats
+    setUserProfile((prev) => {
+      if (!prev) return null
 
-        if (event === "page_view") {
-          updatedStats.totalLogins += 1
-        } else if (event === "feature_used") {
-          updatedStats.featuresUnlocked += 1
-        } else if (event === "transaction_completed") {
-          updatedStats.transactionsCompleted += 1
-        }
+      const updatedStats = { ...prev.stats }
 
-        updateUserProfile({ stats: updatedStats })
+      if (event === "page_view") {
+        updatedStats.totalLogins += 1
+      } else if (event === "feature_used") {
+        updatedStats.featuresUnlocked += 1
+      } else if (event === "transaction_completed") {
+        updatedStats.transactionsCompleted += 1
       }
-    },
-    [userProfile, updateUserProfile],
-  )
+
+      return { ...prev, stats: updatedStats }
+    })
+  }, [])
 
   const trackPageView = useCallback(
     (path: string) => {
