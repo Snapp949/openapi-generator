@@ -23,17 +23,14 @@ import {
   Settings,
   Lightbulb,
   Network,
+  Bot,
 } from "lucide-react"
-import { HolographicHeader } from "@/components/snap-dax/holographic-header" // Assuming this is the correct path
-
-const mockMarketData = [
-  { symbol: "BTC", name: "Bitcoin", price: 68123.45, change: 2.15, volume: "32.1B", marketCap: "1.34T" },
-  { symbol: "ETH", name: "Ethereum", price: 3921.78, change: -0.87, volume: "18.5B", marketCap: "471B" },
-  { symbol: "SOL", name: "Solana", price: 205.67, change: 4.52, volume: "4.1B", marketCap: "95.8B" },
-  { symbol: "BNB", name: "Binance Coin", price: 612.34, change: 1.23, volume: "2.8B", marketCap: "92.5B" },
-  { symbol: "XRP", name: "Ripple", price: 0.521, change: -1.5, volume: "1.5B", marketCap: "28.1B" },
-  { symbol: "ADA", name: "Cardano", price: 0.4678, change: 3.1, volume: "1.2B", marketCap: "16.5B" },
-]
+import { HolographicHeader } from "@/components/snap-dax/holographic-header"
+import { useDaxMarketData } from "@/hooks/use-dax-market-data" // Import the new hook
+import { MarketChart } from "@/components/snap-dax/market-chart" // Import the new chart component
+import { OrderBook } from "@/components/snap-dax/order-book" // Import order book
+import { TradeHistory } from "@/components/snap-dax/trade-history" // Import trade history
+import { AiTradingBots } from "@/components/snap-dax/ai-trading-bots" // Import AI bots component
 
 const mockPortfolioData = [
   {
@@ -92,6 +89,7 @@ const mockNews = [
 
 export function DaxDashboard() {
   const [activeTab, setActiveTab] = useState("overview")
+  const { data, loading, error, refetch } = useDaxMarketData() // Use the new hook
 
   const totalPortfolioValue = mockPortfolioData.reduce((sum, item) => sum + item.value, 0)
   const totalDailyPnL = mockPortfolioData.reduce((sum, item) => sum + item.pnl, 0)
@@ -100,6 +98,19 @@ export function DaxDashboard() {
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value)
   const formatPercentage = (value: number) => `${value.toFixed(2)}%`
+
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+        Loading DAX Dashboard...
+      </div>
+    )
+  if (error)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-red-400">
+        Error loading data: {error}
+      </div>
+    )
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-gray-900 to-slate-950 text-white p-6 font-mono">
@@ -176,7 +187,9 @@ export function DaxDashboard() {
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-slate-800/50 border-slate-700">
+          <TabsList className="grid w-full grid-cols-5 bg-slate-800/50 border-slate-700">
+            {" "}
+            {/* Changed to 5 columns */}
             <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600">
               <Globe className="w-4 h-4 mr-2" />
               Overview
@@ -193,39 +206,26 @@ export function DaxDashboard() {
               <Wallet className="w-4 h-4 mr-2" />
               Portfolio
             </TabsTrigger>
+            <TabsTrigger value="ai-bots" className="data-[state=active]:bg-cyan-600">
+              {" "}
+              {/* New AI Bots tab */}
+              <Bot className="w-4 h-4 mr-2" />
+              AI Bots
+            </TabsTrigger>
           </TabsList>
 
           {/* Overview Tab Content */}
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <Card className="lg:col-span-2 bg-slate-800/50 border-slate-700 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="text-white">Market Indices & Charts</CardTitle>
-                  <CardDescription>Real-time performance of key digital assets.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {/* Placeholder for a complex chart */}
-                  <div className="h-64 bg-slate-900 rounded-lg flex items-center justify-center text-slate-500 text-lg">
-                    [Interactive Chart Placeholder: BTC/USD Daily]
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div className="bg-slate-900/70 p-4 rounded-lg">
-                      <h4 className="text-blue-300 font-semibold mb-1">DAX 500 Index</h4>
-                      <p className="text-2xl font-bold text-white">
-                        12,345.67 <span className="text-green-400 text-base">+1.23%</span>
-                      </p>
-                      <p className="text-slate-400 text-sm">Weighted average of top 500 digital assets</p>
-                    </div>
-                    <div className="bg-slate-900/70 p-4 rounded-lg">
-                      <h4 className="text-purple-300 font-semibold mb-1">DeFi Pulse Index</h4>
-                      <p className="text-2xl font-bold text-white">
-                        4,567.89 <span className="text-red-400 text-base">-0.45%</span>
-                      </p>
-                      <p className="text-slate-400 text-sm">Performance of leading DeFi protocols</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="lg:col-span-2">
+                {data?.historicalData && (
+                  <MarketChart
+                    data={data.historicalData}
+                    title="Market Indices & Charts"
+                    description="Real-time performance of key digital assets."
+                  />
+                )}
+              </div>
 
               <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
                 <CardHeader>
@@ -275,6 +275,7 @@ export function DaxDashboard() {
                     size="sm"
                     variant="outline"
                     className="border-slate-600 bg-transparent text-slate-300 hover:bg-slate-700/50"
+                    onClick={refetch}
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
                     Refresh Data
@@ -283,7 +284,7 @@ export function DaxDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {mockMarketData.map((crypto) => (
+                  {data?.currentMarketData.map((crypto) => (
                     <div
                       key={crypto.symbol}
                       className="flex flex-col p-4 bg-slate-900/70 rounded-lg border border-slate-700 hover:border-blue-500/50 transition-all"
@@ -329,7 +330,9 @@ export function DaxDashboard() {
 
           {/* Trading Tab Content */}
           <TabsContent value="trading" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {" "}
+              {/* Changed to 3 columns */}
               <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
                 <CardHeader>
                   <CardTitle className="text-green-400 flex items-center">
@@ -348,7 +351,7 @@ export function DaxDashboard() {
                         <SelectValue placeholder="Select Asset" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-900 border-slate-700 text-white">
-                        {mockMarketData.map((asset) => (
+                        {data?.currentMarketData.map((asset) => (
                           <SelectItem key={asset.symbol} value={asset.symbol}>
                             {asset.name} ({asset.symbol})
                           </SelectItem>
@@ -383,7 +386,6 @@ export function DaxDashboard() {
                   </Button>
                 </CardContent>
               </Card>
-
               <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
                 <CardHeader>
                   <CardTitle className="text-red-400 flex items-center">
@@ -437,6 +439,12 @@ export function DaxDashboard() {
                   </Button>
                 </CardContent>
               </Card>
+              <div className="space-y-6">
+                {" "}
+                {/* New column for Order Book and Trade History */}
+                {data?.orderBook && <OrderBook bids={data.orderBook.bids} asks={data.orderBook.asks} />}
+                {data?.recentTrades && <TradeHistory trades={data.recentTrades} />}
+              </div>
             </div>
           </TabsContent>
 
@@ -521,6 +529,11 @@ export function DaxDashboard() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* New AI Bots Tab Content */}
+          <TabsContent value="ai-bots" className="space-y-6">
+            <AiTradingBots />
           </TabsContent>
         </Tabs>
       </div>
