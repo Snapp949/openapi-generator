@@ -6,20 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Search,
-  Filter,
-  Star,
-  Heart,
-  ShoppingCart,
-  TrendingUp,
-  Package,
-  Users,
-  BarChart3,
-  Eye,
-  Grid3X3,
-  List,
-} from "lucide-react"
+import { Search, Filter, Star, TrendingUp, Package, Users, BarChart3, Grid3X3, List } from "lucide-react"
+import type { Product } from "@/types/product"
+import HolographicProductCard from "@/components/HolographicProductCard" // Declare the variable here
 
 export default function MarketplacePage() {
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid")
@@ -33,56 +22,206 @@ export default function MarketplacePage() {
     { id: "sports", name: "Sports & Outdoors", count: 98 },
     { id: "books", name: "Books & Media", count: 76 },
     { id: "health", name: "Health & Beauty", count: 134 },
+    { id: "holographic", name: "Holographic", count: 5 }, // New category
   ]
 
-  const products = [
+  const products: Product[] = [
     {
-      id: 1,
+      id: "1",
       name: "Quantum Earbuds Pro",
       price: 299,
-      originalPrice: 399,
       rating: 4.8,
-      reviews: 1247,
+      stock: 120,
       image: "/products/quantum-earbuds.png",
       category: "electronics",
-      badge: "Best Seller",
-      discount: 25,
+      platforms: ["iOS", "Android", "PC"],
+      description: "Immersive audio experience with active noise cancellation.",
     },
     {
-      id: 2,
+      id: "2",
       name: "SmartWatch X Series",
       price: 449,
-      originalPrice: 549,
       rating: 4.6,
-      reviews: 892,
+      stock: 80,
       image: "/products/smartwatch-x.png",
       category: "electronics",
-      badge: "New",
-      discount: 18,
+      platforms: ["iOS", "Android"],
+      description: "Advanced health tracking and smart notifications on your wrist.",
     },
     {
-      id: 3,
+      id: "3",
       name: "HoloVision Webcam",
       price: 199,
-      originalPrice: 249,
       rating: 4.7,
-      reviews: 634,
+      stock: 60,
       image: "/products/holovision-webcam.png",
       category: "electronics",
-      badge: "Popular",
-      discount: 20,
+      platforms: ["PC", "Mac"],
+      description: "Crystal clear video calls with holographic projection capabilities.",
     },
     {
-      id: 4,
+      id: "4",
       name: "Mechanical Gaming Keyboard",
       price: 159,
-      originalPrice: 199,
       rating: 4.9,
-      reviews: 1456,
+      stock: 150,
       image: "/products/mechanical-keyboard.png",
       category: "electronics",
-      badge: "Top Rated",
-      discount: 20,
+      platforms: ["PC"],
+      description: "Responsive mechanical keys for ultimate gaming performance.",
+    },
+    {
+      id: "5",
+      name: "Holo-Gaming Mouse",
+      price: 99,
+      rating: 4.5,
+      stock: 90,
+      image: "/products/holo-gaming-mouse.png",
+      category: "electronics",
+      platforms: ["PC"],
+      description: "Ergonomic design with customizable holographic lighting.",
+    },
+    {
+      id: "6",
+      name: "Bluetooth Speaker X",
+      price: 129,
+      rating: 4.3,
+      stock: 200,
+      image: "/products/bluetooth-speaker.png",
+      category: "electronics",
+      platforms: ["iOS", "Android"],
+      description: "Portable speaker with powerful sound and long battery life.",
+    },
+    {
+      id: "7",
+      name: "USB-C Hub Pro",
+      price: 79,
+      rating: 4.7,
+      stock: 180,
+      image: "/products/usb-c-hub.png",
+      category: "electronics",
+      platforms: ["PC", "Mac", "Tablet"],
+      description: "Expand your device's connectivity with multiple ports.",
+    },
+    {
+      id: "8",
+      name: "Noise-Cancelling Headphones",
+      price: 249,
+      rating: 4.8,
+      stock: 100,
+      image: "/products/noise-cancelling-headphones.png",
+      category: "electronics",
+      platforms: ["iOS", "Android", "PC"],
+      description: "Immerse yourself in music with superior noise cancellation.",
+    },
+    {
+      id: "9",
+      name: "Portable SSD 1TB",
+      price: 179,
+      rating: 4.6,
+      stock: 70,
+      image: "/products/portable-ssd.png",
+      category: "electronics",
+      platforms: ["PC", "Mac", "Console"],
+      description: "Fast and reliable external storage for all your files.",
+    },
+    {
+      id: "10",
+      name: "Wireless Charging Pad",
+      price: 49,
+      rating: 4.2,
+      stock: 250,
+      image: "/products/wireless-charging-pad.png",
+      category: "electronics",
+      platforms: ["iOS", "Android"],
+      description: "Convenient and fast wireless charging for your devices.",
+    },
+    {
+      id: "11",
+      name: "Smart Home Hub",
+      price: 199,
+      rating: 4.7,
+      stock: 50,
+      image: "/products/smart-home-hub.png",
+      category: "electronics",
+      platforms: ["iOS", "Android"],
+      description: "Centralize control of all your smart home devices.",
+    },
+    {
+      id: "12",
+      name: "Gaming Controller Pro",
+      price: 89,
+      rating: 4.5,
+      stock: 110,
+      image: "/products/gaming-controller.png",
+      category: "electronics",
+      platforms: ["PC", "Console"],
+      description: "Precision control and immersive feedback for gaming.",
+    },
+    {
+      id: "13",
+      name: "Holographic Projector",
+      price: 1200,
+      rating: 4.9,
+      stock: 25,
+      image: "/products/holographic-projector.png",
+      category: "holographic",
+      platforms: ["PC", "Mac", "Standalone"],
+      isHolographic: true,
+      holographicFeatures: ["True 3D Projection", "Interactive Gestures", "Spatial Audio"],
+      has360View: true,
+      description: "Experience true 3D holographic projections in your living room.",
+      customizationOptions: {
+        colors: [
+          { name: "Blue", hex: "#007bff", imageSuffix: "-blue" },
+          { name: "Red", hex: "#dc3545", imageSuffix: "-red" },
+          { name: "Green", hex: "#28a745", imageSuffix: "-green" },
+        ],
+        engraving: true,
+      },
+    },
+    {
+      id: "14",
+      name: "Holographic Smart Glasses",
+      price: 800,
+      rating: 4.7,
+      stock: 40,
+      image: "/products/holographic-smart-glasses.png",
+      category: "holographic",
+      platforms: ["iOS", "Android"],
+      isHolographic: true,
+      holographicFeatures: ["AR Overlay", "Voice Control", "Eye Tracking"],
+      has360View: true,
+      description: "Augmented reality glasses for seamless digital interaction.",
+      customizationOptions: {
+        colors: [
+          { name: "Black", hex: "#000000", imageSuffix: "-black" },
+          { name: "Silver", hex: "#C0C0C0", imageSuffix: "-silver" },
+        ],
+      },
+    },
+    {
+      id: "15",
+      name: "Holographic Drone",
+      price: 600,
+      rating: 4.6,
+      stock: 30,
+      image: "/products/holographic-drone.png",
+      category: "holographic",
+      platforms: ["iOS", "Android", "Remote"],
+      isHolographic: true,
+      holographicFeatures: ["Flight Path Projection", "Object Recognition", "Live Hologram Feed"],
+      has360View: true,
+      description: "A drone that projects interactive holograms in the sky.",
+      customizationOptions: {
+        colors: [
+          { name: "Default", hex: "#6366F1", imageSuffix: "" }, // Default image
+          { name: "Blue", hex: "#3B82F6", imageSuffix: "-blue" },
+          { name: "Red", hex: "#EF4444", imageSuffix: "-red" },
+          { name: "Green", hex: "#22C55E", imageSuffix: "-green" },
+        ],
+        engraving: true,
+      },
     },
   ]
 
@@ -203,65 +342,7 @@ export default function MarketplacePage() {
               }
             >
               {filteredProducts.map((product) => (
-                <Card
-                  key={product.id}
-                  className="group cursor-pointer hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-background/80 to-background/40 backdrop-blur-sm border-white/20 hover:border-white/40"
-                >
-                  <div className="relative">
-                    <img
-                      src={product.image || "/placeholder.svg"}
-                      alt={product.name}
-                      className="w-full h-48 object-cover rounded-t-lg"
-                    />
-                    {product.badge && (
-                      <Badge className="absolute top-2 left-2" variant="secondary">
-                        {product.badge}
-                      </Badge>
-                    )}
-                    {product.discount > 0 && (
-                      <Badge className="absolute top-2 right-2 bg-red-500" variant="destructive">
-                        -{product.discount}%
-                      </Badge>
-                    )}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-t-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="secondary">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="secondary">
-                          <Heart className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="secondary">
-                          <ShoppingCart className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
-                      {product.name}
-                    </h3>
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="text-sm font-medium ml-1">{product.rating}</span>
-                      </div>
-                      <span className="text-sm text-muted-foreground">({product.reviews} reviews)</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl font-bold">${product.price}</span>
-                        {product.originalPrice > product.price && (
-                          <span className="text-sm text-muted-foreground line-through">${product.originalPrice}</span>
-                        )}
-                      </div>
-                      <Button size="sm">
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        Add to Cart
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <HolographicProductCard key={product.id} product={product} />
               ))}
             </div>
           </TabsContent>

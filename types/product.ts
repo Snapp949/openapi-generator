@@ -11,4 +11,9 @@ export interface Product {
   isHolographic?: boolean
   holographicFeatures?: string[]
   has360View?: boolean
+  customizationOptions?: {
+    colors?: { name: string; hex: string; imageSuffix: string }[]
+    materials?: { name: string; texture: string }[]
+    engraving?: boolean
+  }
 }

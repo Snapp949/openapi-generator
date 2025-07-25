@@ -2,12 +2,13 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Star, ShoppingCart, Eye, Heart, Zap, BarChart3, ImageIcon, RotateCcw } from "lucide-react"
+import { Star, ShoppingCart, Eye, Heart, Zap, BarChart3, ImageIcon, RotateCcw, Settings } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { HolographicLabel } from "./holographic-label"
 import { Product360Modal } from "./product-360-modal"
+import { HolographicProductCustomizerModal } from "./holographic-product-customizer-modal" // New import
 import Image from "next/image"
 import { useProductComparison } from "@/contexts/product-comparison-context"
 import type { Product } from "@/types/product"
@@ -21,11 +22,17 @@ export function HolographicProductCard({ product }: HolographicProductCardProps)
   const [isLiked, setIsLiked] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [show360Modal, setShow360Modal] = useState(false)
+  const [showCustomizerModal, setShowCustomizerModal] = useState(false) // New state for customizer
 
   const { addToComparison, removeFromComparison, isInComparison, maxComparisonItems, comparisonProducts } =
     useProductComparison()
   const inComparison = isInComparison(product.id)
   const canAddToComparison = comparisonProducts.length < maxComparisonItems
+
+  const hasCustomization =
+    product.isHolographic &&
+    product.customizationOptions &&
+    (product.customizationOptions.colors || product.customizationOptions.engraving)
 
   return (
     <>
@@ -135,19 +142,20 @@ export function HolographicProductCard({ product }: HolographicProductCardProps)
                 )}
 
                 {/* 360° View Button */}
-                {product.has360View && (
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="absolute bottom-2 right-2 h-8 w-8 bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all duration-200"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      setShow360Modal(true)
-                    }}
-                  >
-                    <RotateCcw className="h-4 w-4 text-white" />
-                  </Button>
-                )}
+                {product.has360View &&
+                  !hasCustomization && ( // Only show 360 button if no customization
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="absolute bottom-2 right-2 h-8 w-8 bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-all duration-200"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setShow360Modal(true)
+                      }}
+                    >
+                      <RotateCcw className="h-4 w-4 text-white" />
+                    </Button>
+                  )}
               </div>
 
               {/* Holographic Label - Top Priority */}
@@ -188,7 +196,7 @@ export function HolographicProductCard({ product }: HolographicProductCardProps)
               )}
 
               {/* 360° View Badge */}
-              {product.has360View && (
+              {product.has360View && !hasCustomization && (
                 <Badge className="absolute top-2 right-12 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg">
                   360°
                 </Badge>
@@ -314,8 +322,16 @@ export function HolographicProductCard({ product }: HolographicProductCardProps)
                   variant="outline"
                   size="sm"
                   className="border-indigo-500/20 bg-indigo-950/30 text-indigo-300 hover:bg-indigo-900/30 hover:text-indigo-200 transition-all duration-200"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (hasCustomization) {
+                      setShowCustomizerModal(true)
+                    } else if (product.has360View) {
+                      setShow360Modal(true)
+                    }
+                  }}
                 >
-                  <Eye className="w-4 h-4" />
+                  {hasCustomization ? <Settings className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </Button>
               </div>
             </div>
@@ -324,7 +340,18 @@ export function HolographicProductCard({ product }: HolographicProductCardProps)
       </motion.div>
 
       {/* 360° Product Modal */}
-      <Product360Modal isOpen={show360Modal} onClose={() => setShow360Modal(false)} product={product} />
+      {product.has360View && !hasCustomization && (
+        <Product360Modal isOpen={show360Modal} onClose={() => setShow360Modal(false)} product={product} />
+      )}
+
+      {/* Holographic Product Customizer Modal */}
+      {hasCustomization && (
+        <HolographicProductCustomizerModal
+          isOpen={showCustomizerModal}
+          onClose={() => setShowCustomizerModal(false)}
+          product={product}
+        />
+      )}
     </>
   )
 }
