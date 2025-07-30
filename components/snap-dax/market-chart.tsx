@@ -1,200 +1,277 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  AreaChart,
+  Area,
+} from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { TrendingUp, TrendingDown, Activity } from "lucide-react"
-import { useDaxMarketData } from "@/hooks/use-dax-market-data"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { TrendingUp, TrendingDown, BarChart3, Activity, Maximize2 } from "lucide-react"
 
-interface ChartData {
-  time: string
-  price: number
-  volume: number
+interface HistoricalDataPoint {
+  name: string
+  timestamp: number
+  BTC: number
+  ETH: number
+  SOL: number
+  ADA: number
+  MATIC: number
+  DOT: number
 }
 
-export function MarketChart() {
-  const { data, loading, error } = useDaxMarketData()
-  const [selectedSymbol, setSelectedSymbol] = useState("BTC")
-  const [timeframe, setTimeframe] = useState("1H")
-  const [chartData, setChartData] = useState<ChartData[]>([])
+interface MarketChartProps {
+  data: HistoricalDataPoint[]
+  title: string
+  description: string
+}
 
-  // Generate mock chart data
-  useEffect(() => {
-    const generateChartData = () => {
-      const points = 50
-      const mockData: ChartData[] = []
-      const basePrice = selectedSymbol === "BTC" ? 43000 : selectedSymbol === "ETH" ? 2600 : 100
+export function MarketChart({ data, title, description }: MarketChartProps) {
+  const [selectedSymbols, setSelectedSymbols] = useState(["BTC", "ETH", "SOL"])
+  const [timeframe, setTimeframe] = useState("24H")
+  const [chartType, setChartType] = useState<"line" | "area">("area")
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
-      for (let i = 0; i < points; i++) {
-        const time = new Date(Date.now() - (points - i) * 60000).toLocaleTimeString()
-        const variation = (Math.random() - 0.5) * 0.02
-        const price = basePrice * (1 + variation * (i / points))
-        const volume = Math.random() * 1000000
+  const symbols = ["BTC", "ETH", "SOL", "ADA", "MATIC", "DOT"]
+  const symbolColors = {
+    BTC: "#F7931A",
+    ETH: "#627EEA",
+    SOL: "#9945FF",
+    ADA: "#0033AD",
+    MATIC: "#8247E5",
+    DOT: "#E6007A",
+  }
 
-        mockData.push({ time, price, volume })
-      }
-
-      setChartData(mockData)
+  const formatCurrency = (value: number) => {
+    if (value >= 1000) {
+      return `$${(value / 1000).toFixed(1)}K`
     }
-
-    generateChartData()
-    const interval = setInterval(generateChartData, 5000)
-    return () => clearInterval(interval)
-  }, [selectedSymbol])
-
-  const selectedData = data.find((item) => item.symbol === selectedSymbol)
-  const isPositive = selectedData ? Number.parseFloat(selectedData.change) > 0 : false
-
-  if (loading) {
-    return (
-      <Card className="bg-black/40 border-cyan-500/20">
-        <CardContent className="p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-cyan-500/20 rounded w-1/4"></div>
-            <div className="h-64 bg-cyan-500/10 rounded"></div>
-          </div>
-        </CardContent>
-      </Card>
-    )
+    return `$${value.toFixed(value < 1 ? 4 : 0)}`
   }
 
-  if (error) {
-    return (
-      <Card className="bg-black/40 border-red-500/20">
-        <CardContent className="p-6 text-center">
-          <p className="text-red-400">Error loading chart data: {error}</p>
-        </CardContent>
-      </Card>
-    )
+  const formatTooltipValue = (value: number, name: string) => {
+    return [
+      `$${value.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`,
+      name,
+    ]
   }
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-slate-800/95 border border-slate-600 rounded-lg p-4 shadow-xl backdrop-blur-sm">
+          <p className="text-slate-300 text-sm mb-2 font-medium">{`Time: ${label}`}</p>
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className="flex items-center justify-between gap-4 mb-1">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
+                <span className="text-sm font-medium" style={{ color: entry.color }}>
+                  {entry.dataKey}
+                </span>
+              </div>
+              <span className="text-white font-mono text-sm">{formatCurrency(entry.value)}</span>
+            </div>
+          ))}
+        </div>
+      )
+    }
+    return null
+  }
+
+  const toggleSymbol = (symbol: string) => {
+    setSelectedSymbols((prev) => (prev.includes(symbol) ? prev.filter((s) => s !== symbol) : [...prev, symbol]))
+  }
+
+  const chartData = data.slice(-24) // Last 24 hours
 
   return (
-    <Card className="bg-black/40 border-cyan-500/20 backdrop-blur-sm">
-      <CardHeader className="pb-4">
+    <Card
+      className={`bg-slate-800/50 border-slate-700 backdrop-blur-sm transition-all duration-300 ${
+        isFullscreen ? "fixed inset-4 z-50" : ""
+      }`}
+    >
+      <CardHeader>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <CardTitle className="text-cyan-400 flex items-center gap-2">
-              <Activity className="w-5 h-5" />
-              Market Chart
+          <div>
+            <CardTitle className="text-white flex items-center">
+              <BarChart3 className="w-5 h-5 mr-2 text-blue-400" />
+              {title}
             </CardTitle>
-            <div className="flex gap-2">
-              {data.slice(0, 4).map((item) => (
-                <Button
-                  key={item.symbol}
-                  variant={selectedSymbol === item.symbol ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedSymbol(item.symbol)}
-                  className={
-                    selectedSymbol === item.symbol
-                      ? "bg-cyan-500 text-black"
-                      : "border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
-                  }
-                >
-                  {item.symbol}
-                </Button>
-              ))}
-            </div>
+            <p className="text-slate-400 text-sm mt-1">{description}</p>
           </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="border-slate-600 bg-transparent text-slate-300 hover:bg-slate-700/50"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="flex flex-wrap items-center gap-4 mt-4">
+          {/* Symbol Selection */}
+          <div className="flex flex-wrap gap-2">
+            {symbols.map((symbol) => (
+              <Button
+                key={symbol}
+                size="sm"
+                variant={selectedSymbols.includes(symbol) ? "default" : "outline"}
+                onClick={() => toggleSymbol(symbol)}
+                className={
+                  selectedSymbols.includes(symbol)
+                    ? "text-white"
+                    : "border-slate-600 bg-transparent text-slate-300 hover:bg-slate-700/50"
+                }
+                style={
+                  selectedSymbols.includes(symbol)
+                    ? {
+                        backgroundColor: symbolColors[symbol as keyof typeof symbolColors],
+                        borderColor: symbolColors[symbol as keyof typeof symbolColors],
+                      }
+                    : {}
+                }
+              >
+                {symbol}
+              </Button>
+            ))}
+          </div>
+
+          {/* Timeframe Selection */}
           <div className="flex gap-2">
-            {["1H", "4H", "1D", "1W"].map((tf) => (
+            {["1H", "4H", "24H", "7D", "30D"].map((tf) => (
               <Button
                 key={tf}
-                variant={timeframe === tf ? "default" : "outline"}
                 size="sm"
+                variant={timeframe === tf ? "default" : "outline"}
                 onClick={() => setTimeframe(tf)}
                 className={
-                  timeframe === tf ? "bg-blue-500 text-white" : "border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+                  timeframe === tf
+                    ? "bg-blue-600 hover:bg-blue-700 text-white"
+                    : "border-slate-600 bg-transparent text-slate-300 hover:bg-slate-700/50"
                 }
               >
                 {tf}
               </Button>
             ))}
           </div>
-        </div>
 
-        {selectedData && (
-          <div className="flex items-center gap-4 mt-4">
-            <div className="text-2xl font-bold text-white">
-              ${Number.parseFloat(selectedData.price).toLocaleString()}
-            </div>
-            <Badge
-              variant={isPositive ? "default" : "destructive"}
-              className={
-                isPositive
-                  ? "bg-green-500/20 text-green-400 border-green-500/30"
-                  : "bg-red-500/20 text-red-400 border-red-500/30"
-              }
-            >
-              {isPositive ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
-              {selectedData.change}%
-            </Badge>
-            <div className="text-sm text-gray-400">Vol: ${Number.parseInt(selectedData.volume).toLocaleString()}</div>
-          </div>
-        )}
+          {/* Chart Type */}
+          <Select value={chartType} onValueChange={(value: "line" | "area") => setChartType(value)}>
+            <SelectTrigger className="w-32 bg-slate-900/70 border-slate-700 text-white">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-900 border-slate-700 text-white">
+              <SelectItem value="line">Line Chart</SelectItem>
+              <SelectItem value="area">Area Chart</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
 
-      <CardContent>
-        <div className="h-64 relative">
-          {/* Simple SVG Chart */}
-          <svg className="w-full h-full" viewBox="0 0 800 200">
-            <defs>
-              <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="rgb(34, 197, 94)" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="rgb(34, 197, 94)" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-
-            {/* Grid lines */}
-            {[0, 1, 2, 3, 4].map((i) => (
-              <line
-                key={i}
-                x1="0"
-                y1={i * 50}
-                x2="800"
-                y2={i * 50}
-                stroke="rgb(34, 197, 94)"
-                strokeOpacity="0.1"
-                strokeWidth="1"
-              />
-            ))}
-
-            {/* Chart line */}
-            {chartData.length > 1 && (
-              <>
-                <path
-                  d={`M ${chartData
-                    .map(
-                      (point, index) =>
-                        `${(index / (chartData.length - 1)) * 800},${200 - (point.price / Math.max(...chartData.map((p) => p.price))) * 180}`,
-                    )
-                    .join(" L ")}`}
-                  fill="url(#chartGradient)"
-                  stroke="rgb(34, 197, 94)"
-                  strokeWidth="2"
-                  fillOpacity="0.3"
+      <CardContent className={isFullscreen ? "h-[calc(100vh-200px)]" : "h-96"}>
+        <ResponsiveContainer width="100%" height="100%">
+          {chartType === "area" ? (
+            <AreaChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+              <XAxis dataKey="name" stroke="#9CA3AF" fontSize={12} tickLine={false} axisLine={false} />
+              <YAxis stroke="#9CA3AF" fontSize={12} tickLine={false} axisLine={false} tickFormatter={formatCurrency} />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend wrapperStyle={{ color: "#E5E7EB", paddingTop: "20px" }} iconType="line" />
+              {selectedSymbols.map((symbol) => (
+                <Area
+                  key={symbol}
+                  type="monotone"
+                  dataKey={symbol}
+                  stroke={symbolColors[symbol as keyof typeof symbolColors]}
+                  fill={symbolColors[symbol as keyof typeof symbolColors]}
+                  fillOpacity={0.1}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{
+                    r: 6,
+                    stroke: symbolColors[symbol as keyof typeof symbolColors],
+                    strokeWidth: 2,
+                    fill: "#1F2937",
+                  }}
                 />
-                <path
-                  d={`M ${chartData
-                    .map(
-                      (point, index) =>
-                        `${(index / (chartData.length - 1)) * 800},${200 - (point.price / Math.max(...chartData.map((p) => p.price))) * 180}`,
-                    )
-                    .join(" L ")}`}
-                  fill="none"
-                  stroke="rgb(34, 197, 94)"
-                  strokeWidth="2"
+              ))}
+            </AreaChart>
+          ) : (
+            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+              <XAxis dataKey="name" stroke="#9CA3AF" fontSize={12} tickLine={false} axisLine={false} />
+              <YAxis stroke="#9CA3AF" fontSize={12} tickLine={false} axisLine={false} tickFormatter={formatCurrency} />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend wrapperStyle={{ color: "#E5E7EB", paddingTop: "20px" }} iconType="line" />
+              {selectedSymbols.map((symbol) => (
+                <Line
+                  key={symbol}
+                  type="monotone"
+                  dataKey={symbol}
+                  stroke={symbolColors[symbol as keyof typeof symbolColors]}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{
+                    r: 6,
+                    stroke: symbolColors[symbol as keyof typeof symbolColors],
+                    strokeWidth: 2,
+                    fill: "#1F2937",
+                  }}
                 />
-              </>
-            )}
-          </svg>
+              ))}
+            </LineChart>
+          )}
+        </ResponsiveContainer>
 
-          {/* Chart overlay info */}
-          <div className="absolute top-4 right-4 bg-black/60 rounded-lg p-3 text-sm">
-            <div className="text-gray-400">24h Range</div>
-            <div className="text-white">
-              ${selectedData?.low24h} - ${selectedData?.high24h}
+        {/* Market Indices */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-4 border-t border-slate-700">
+          <div className="bg-slate-900/70 p-4 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-blue-300 font-semibold text-sm">DAX 500 Index</h4>
+              <TrendingUp className="w-4 h-4 text-green-400" />
             </div>
+            <p className="text-2xl font-bold text-white">
+              12,345.67 <span className="text-green-400 text-base ml-2">+1.23%</span>
+            </p>
+            <p className="text-slate-400 text-xs mt-1">Weighted average of top 500 digital assets</p>
+          </div>
+
+          <div className="bg-slate-900/70 p-4 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-purple-300 font-semibold text-sm">DeFi Pulse Index</h4>
+              <TrendingDown className="w-4 h-4 text-red-400" />
+            </div>
+            <p className="text-2xl font-bold text-white">
+              4,567.89 <span className="text-red-400 text-base ml-2">-0.45%</span>
+            </p>
+            <p className="text-slate-400 text-xs mt-1">Performance of leading DeFi protocols</p>
+          </div>
+
+          <div className="bg-slate-900/70 p-4 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-orange-300 font-semibold text-sm">Volatility Index</h4>
+              <Activity className="w-4 h-4 text-orange-400" />
+            </div>
+            <p className="text-2xl font-bold text-white">
+              23.45 <span className="text-orange-400 text-base ml-2">+2.1%</span>
+            </p>
+            <p className="text-slate-400 text-xs mt-1">Market volatility indicator</p>
           </div>
         </div>
       </CardContent>

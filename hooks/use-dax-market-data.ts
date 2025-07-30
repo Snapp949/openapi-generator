@@ -2,42 +2,106 @@
 
 import { useState, useEffect, useCallback } from "react"
 
-interface MarketData {
+interface MarketDataPoint {
   symbol: string
-  price: string
-  change: string
+  name: string
+  price: number
+  change: number
   volume: string
   marketCap: string
-  high24h: string
-  low24h: string
-  timestamp: number
+  high24h: number
+  low24h: number
+  priceChange24h: number
 }
 
-interface UseMarketDataReturn {
-  data: MarketData[]
+interface HistoricalDataPoint {
+  name: string
+  timestamp: number
+  BTC: number
+  ETH: number
+  SOL: number
+  ADA: number
+  MATIC: number
+  DOT: number
+}
+
+interface OrderBookEntry {
+  price: number
+  amount: number
+  total: number
+}
+
+interface OrderBook {
+  bids: OrderBookEntry[]
+  asks: OrderBookEntry[]
+}
+
+interface RecentTrade {
+  id: string
+  time: string
+  timestamp: number
+  price: number
+  amount: number
+  type: "buy" | "sell"
+  total: number
+}
+
+interface MarketStats {
+  totalMarketCap: string
+  totalVolume24h: string
+  defiTvl: string
+  btcDominance: number
+  fearGreedIndex: number
+  activeTraders: number
+}
+
+interface DaxMarketData {
+  currentMarketData: MarketDataPoint[]
+  historicalData: HistoricalDataPoint[]
+  orderBook: OrderBook
+  recentTrades: RecentTrade[]
+  marketStats: MarketStats
+  timestamp: string
+}
+
+interface UseDaxMarketDataReturn {
+  data: DaxMarketData | null
   loading: boolean
   error: string | null
   refetch: () => void
+  lastUpdated: Date | null
 }
 
-export function useDaxMarketData(refreshInterval = 5000): UseMarketDataReturn {
-  const [data, setData] = useState<MarketData[]>([])
+export function useDaxMarketData(refreshInterval = 5000): UseDaxMarketDataReturn {
+  const [data, setData] = useState<DaxMarketData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
   const fetchData = useCallback(async () => {
     try {
-      const response = await fetch("/api/dax/market-data")
+      setError(null)
+      const response = await fetch("/api/dax/market-data", {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache",
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
       const result = await response.json()
 
       if (result.success) {
-        setData(result.data)
-        setError(null)
+        setData(result)
+        setLastUpdated(new Date())
       } else {
-        setError(result.error || "Failed to fetch data")
+        throw new Error(result.error || "Failed to fetch market data")
       }
-    } catch (err) {
-      setError("Network error occurred")
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch market data")
       console.error("Market data fetch error:", err)
     } finally {
       setLoading(false)
@@ -52,10 +116,17 @@ export function useDaxMarketData(refreshInterval = 5000): UseMarketDataReturn {
   useEffect(() => {
     fetchData()
 
+    // Set up polling for real-time updates
     const interval = setInterval(fetchData, refreshInterval)
 
     return () => clearInterval(interval)
   }, [fetchData, refreshInterval])
 
-  return { data, loading, error, refetch }
+  return {
+    data,
+    loading,
+    error,
+    refetch,
+    lastUpdated,
+  }
 }
