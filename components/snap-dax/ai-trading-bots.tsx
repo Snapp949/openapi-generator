@@ -85,7 +85,7 @@ export function AiTradingBots() {
       } else {
         throw new Error(result.error)
       }
-    } catch (e) {
+    } catch (e: any) {
       setError(e.message)
     } finally {
       setLoading(false)
@@ -127,7 +127,7 @@ export function AiTradingBots() {
           ),
         )
       }
-    } catch (e) {
+    } catch (e: any) {
       setError(e.message)
     } finally {
       setActionLoading(null)
