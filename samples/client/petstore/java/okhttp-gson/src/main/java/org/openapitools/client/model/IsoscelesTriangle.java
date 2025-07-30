@@ -48,20 +48,22 @@ import org.openapitools.client.JSON;
 /**
  * IsoscelesTriangle
  */
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.9.0-SNAPSHOT")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.15.0-SNAPSHOT")
 public class IsoscelesTriangle {
   public static final String SERIALIZED_NAME_SHAPE_TYPE = "shapeType";
   @SerializedName(SERIALIZED_NAME_SHAPE_TYPE)
+  @javax.annotation.Nonnull
   private String shapeType;
 
   public static final String SERIALIZED_NAME_TRIANGLE_TYPE = "triangleType";
   @SerializedName(SERIALIZED_NAME_TRIANGLE_TYPE)
+  @javax.annotation.Nonnull
   private String triangleType;
 
   public IsoscelesTriangle() {
   }
 
-  public IsoscelesTriangle shapeType(String shapeType) {
+  public IsoscelesTriangle shapeType(@javax.annotation.Nonnull String shapeType) {
     this.shapeType = shapeType;
     return this;
   }
@@ -75,12 +77,12 @@ public class IsoscelesTriangle {
     return shapeType;
   }
 
-  public void setShapeType(String shapeType) {
+  public void setShapeType(@javax.annotation.Nonnull String shapeType) {
     this.shapeType = shapeType;
   }
 
 
-  public IsoscelesTriangle triangleType(String triangleType) {
+  public IsoscelesTriangle triangleType(@javax.annotation.Nonnull String triangleType) {
     this.triangleType = triangleType;
     return this;
   }
@@ -94,7 +96,7 @@ public class IsoscelesTriangle {
     return triangleType;
   }
 
-  public void setTriangleType(String triangleType) {
+  public void setTriangleType(@javax.annotation.Nonnull String triangleType) {
     this.triangleType = triangleType;
   }
 
@@ -145,14 +147,10 @@ public class IsoscelesTriangle {
 
   static {
     // a set of all properties/fields (JSON key names)
-    openapiFields = new HashSet<String>();
-    openapiFields.add("shapeType");
-    openapiFields.add("triangleType");
+    openapiFields = new HashSet<String>(Arrays.asList("shapeType", "triangleType"));
 
     // a set of required properties/fields (JSON key names)
-    openapiRequiredFields = new HashSet<String>();
-    openapiRequiredFields.add("shapeType");
-    openapiRequiredFields.add("triangleType");
+    openapiRequiredFields = new HashSet<String>(Arrays.asList("shapeType", "triangleType"));
   }
 
   /**

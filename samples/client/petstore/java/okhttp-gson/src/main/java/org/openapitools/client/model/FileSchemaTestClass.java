@@ -51,20 +51,22 @@ import org.openapitools.client.JSON;
 /**
  * FileSchemaTestClass
  */
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.9.0-SNAPSHOT")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.15.0-SNAPSHOT")
 public class FileSchemaTestClass {
   public static final String SERIALIZED_NAME_FILE = "file";
   @SerializedName(SERIALIZED_NAME_FILE)
+  @javax.annotation.Nullable
   private ModelFile _file;
 
   public static final String SERIALIZED_NAME_FILES = "files";
   @SerializedName(SERIALIZED_NAME_FILES)
+  @javax.annotation.Nullable
   private List<ModelFile> files = new ArrayList<>();
 
   public FileSchemaTestClass() {
   }
 
-  public FileSchemaTestClass _file(ModelFile _file) {
+  public FileSchemaTestClass _file(@javax.annotation.Nullable ModelFile _file) {
     this._file = _file;
     return this;
   }
@@ -78,12 +80,12 @@ public class FileSchemaTestClass {
     return _file;
   }
 
-  public void setFile(ModelFile _file) {
+  public void setFile(@javax.annotation.Nullable ModelFile _file) {
     this._file = _file;
   }
 
 
-  public FileSchemaTestClass files(List<ModelFile> files) {
+  public FileSchemaTestClass files(@javax.annotation.Nullable List<ModelFile> files) {
     this.files = files;
     return this;
   }
@@ -105,7 +107,7 @@ public class FileSchemaTestClass {
     return files;
   }
 
-  public void setFiles(List<ModelFile> files) {
+  public void setFiles(@javax.annotation.Nullable List<ModelFile> files) {
     this.files = files;
   }
 
@@ -202,12 +204,10 @@ public class FileSchemaTestClass {
 
   static {
     // a set of all properties/fields (JSON key names)
-    openapiFields = new HashSet<String>();
-    openapiFields.add("file");
-    openapiFields.add("files");
+    openapiFields = new HashSet<String>(Arrays.asList("file", "files"));
 
     // a set of required properties/fields (JSON key names)
-    openapiRequiredFields = new HashSet<String>();
+    openapiRequiredFields = new HashSet<String>(0);
   }
 
   /**

@@ -48,16 +48,17 @@ import org.openapitools.client.JSON;
 /**
  * QuadrilateralInterface
  */
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.9.0-SNAPSHOT")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.15.0-SNAPSHOT")
 public class QuadrilateralInterface {
   public static final String SERIALIZED_NAME_QUADRILATERAL_TYPE = "quadrilateralType";
   @SerializedName(SERIALIZED_NAME_QUADRILATERAL_TYPE)
+  @javax.annotation.Nonnull
   private String quadrilateralType;
 
   public QuadrilateralInterface() {
   }
 
-  public QuadrilateralInterface quadrilateralType(String quadrilateralType) {
+  public QuadrilateralInterface quadrilateralType(@javax.annotation.Nonnull String quadrilateralType) {
     this.quadrilateralType = quadrilateralType;
     return this;
   }
@@ -71,7 +72,7 @@ public class QuadrilateralInterface {
     return quadrilateralType;
   }
 
-  public void setQuadrilateralType(String quadrilateralType) {
+  public void setQuadrilateralType(@javax.annotation.Nonnull String quadrilateralType) {
     this.quadrilateralType = quadrilateralType;
   }
 
@@ -166,12 +167,10 @@ public class QuadrilateralInterface {
 
   static {
     // a set of all properties/fields (JSON key names)
-    openapiFields = new HashSet<String>();
-    openapiFields.add("quadrilateralType");
+    openapiFields = new HashSet<String>(Arrays.asList("quadrilateralType"));
 
     // a set of required properties/fields (JSON key names)
-    openapiRequiredFields = new HashSet<String>();
-    openapiRequiredFields.add("quadrilateralType");
+    openapiRequiredFields = new HashSet<String>(Arrays.asList("quadrilateralType"));
   }
 
   /**

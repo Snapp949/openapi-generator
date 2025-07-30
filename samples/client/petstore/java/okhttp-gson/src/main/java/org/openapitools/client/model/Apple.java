@@ -48,20 +48,22 @@ import org.openapitools.client.JSON;
 /**
  * Apple
  */
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.9.0-SNAPSHOT")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.15.0-SNAPSHOT")
 public class Apple {
   public static final String SERIALIZED_NAME_CULTIVAR = "cultivar";
   @SerializedName(SERIALIZED_NAME_CULTIVAR)
+  @javax.annotation.Nullable
   private String cultivar;
 
   public static final String SERIALIZED_NAME_ORIGIN = "origin";
   @SerializedName(SERIALIZED_NAME_ORIGIN)
+  @javax.annotation.Nullable
   private String origin;
 
   public Apple() {
   }
 
-  public Apple cultivar(String cultivar) {
+  public Apple cultivar(@javax.annotation.Nullable String cultivar) {
     this.cultivar = cultivar;
     return this;
   }
@@ -75,12 +77,12 @@ public class Apple {
     return cultivar;
   }
 
-  public void setCultivar(String cultivar) {
+  public void setCultivar(@javax.annotation.Nullable String cultivar) {
     this.cultivar = cultivar;
   }
 
 
-  public Apple origin(String origin) {
+  public Apple origin(@javax.annotation.Nullable String origin) {
     this.origin = origin;
     return this;
   }
@@ -94,7 +96,7 @@ public class Apple {
     return origin;
   }
 
-  public void setOrigin(String origin) {
+  public void setOrigin(@javax.annotation.Nullable String origin) {
     this.origin = origin;
   }
 
@@ -191,12 +193,10 @@ public class Apple {
 
   static {
     // a set of all properties/fields (JSON key names)
-    openapiFields = new HashSet<String>();
-    openapiFields.add("cultivar");
-    openapiFields.add("origin");
+    openapiFields = new HashSet<String>(Arrays.asList("cultivar", "origin"));
 
     // a set of required properties/fields (JSON key names)
-    openapiRequiredFields = new HashSet<String>();
+    openapiRequiredFields = new HashSet<String>(0);
   }
 
   /**

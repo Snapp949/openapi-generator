@@ -51,10 +51,11 @@ import org.openapitools.client.JSON;
 /**
  * Cat
  */
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.9.0-SNAPSHOT")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.15.0-SNAPSHOT")
 public class Cat extends Animal implements Parcelable {
   public static final String SERIALIZED_NAME_DECLAWED = "declawed";
   @SerializedName(SERIALIZED_NAME_DECLAWED)
+  @javax.annotation.Nullable
   private Boolean declawed;
 
   public Cat() {
@@ -62,7 +63,7 @@ public class Cat extends Animal implements Parcelable {
     this.className = this.getClass().getSimpleName();
   }
 
-  public Cat declawed(Boolean declawed) {
+  public Cat declawed(@javax.annotation.Nullable Boolean declawed) {
     this.declawed = declawed;
     return this;
   }
@@ -76,7 +77,7 @@ public class Cat extends Animal implements Parcelable {
     return declawed;
   }
 
-  public void setDeclawed(Boolean declawed) {
+  public void setDeclawed(@javax.annotation.Nullable Boolean declawed) {
     this.declawed = declawed;
   }
 
@@ -150,14 +151,10 @@ public class Cat extends Animal implements Parcelable {
 
   static {
     // a set of all properties/fields (JSON key names)
-    openapiFields = new HashSet<String>();
-    openapiFields.add("className");
-    openapiFields.add("color");
-    openapiFields.add("declawed");
+    openapiFields = new HashSet<String>(Arrays.asList("className", "color", "declawed"));
 
     // a set of required properties/fields (JSON key names)
-    openapiRequiredFields = new HashSet<String>();
-    openapiRequiredFields.add("className");
+    openapiRequiredFields = new HashSet<String>(Arrays.asList("className"));
   }
 
   /**

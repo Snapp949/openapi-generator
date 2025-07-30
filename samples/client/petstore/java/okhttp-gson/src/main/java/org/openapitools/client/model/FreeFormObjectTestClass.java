@@ -49,20 +49,22 @@ import org.openapitools.client.JSON;
 /**
  * FreeFormObjectTestClass
  */
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.9.0-SNAPSHOT")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.15.0-SNAPSHOT")
 public class FreeFormObjectTestClass {
   public static final String SERIALIZED_NAME_NAME = "name";
   @SerializedName(SERIALIZED_NAME_NAME)
+  @javax.annotation.Nullable
   private String name;
 
   public static final String SERIALIZED_NAME_PROPERTIES = "properties";
   @SerializedName(SERIALIZED_NAME_PROPERTIES)
+  @javax.annotation.Nullable
   private FreeFormObjectTestClassProperties properties;
 
   public FreeFormObjectTestClass() {
   }
 
-  public FreeFormObjectTestClass name(String name) {
+  public FreeFormObjectTestClass name(@javax.annotation.Nullable String name) {
     this.name = name;
     return this;
   }
@@ -76,12 +78,12 @@ public class FreeFormObjectTestClass {
     return name;
   }
 
-  public void setName(String name) {
+  public void setName(@javax.annotation.Nullable String name) {
     this.name = name;
   }
 
 
-  public FreeFormObjectTestClass properties(FreeFormObjectTestClassProperties properties) {
+  public FreeFormObjectTestClass properties(@javax.annotation.Nullable FreeFormObjectTestClassProperties properties) {
     this.properties = properties;
     return this;
   }
@@ -95,7 +97,7 @@ public class FreeFormObjectTestClass {
     return properties;
   }
 
-  public void setProperties(FreeFormObjectTestClassProperties properties) {
+  public void setProperties(@javax.annotation.Nullable FreeFormObjectTestClassProperties properties) {
     this.properties = properties;
   }
 
@@ -192,12 +194,10 @@ public class FreeFormObjectTestClass {
 
   static {
     // a set of all properties/fields (JSON key names)
-    openapiFields = new HashSet<String>();
-    openapiFields.add("name");
-    openapiFields.add("properties");
+    openapiFields = new HashSet<String>(Arrays.asList("name", "properties"));
 
     // a set of required properties/fields (JSON key names)
-    openapiRequiredFields = new HashSet<String>();
+    openapiRequiredFields = new HashSet<String>(0);
   }
 
   /**

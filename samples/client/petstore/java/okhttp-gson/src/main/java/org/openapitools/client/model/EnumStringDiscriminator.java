@@ -48,7 +48,7 @@ import org.openapitools.client.JSON;
 /**
  * An object to test discriminator of enum string
  */
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.9.0-SNAPSHOT")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.15.0-SNAPSHOT")
 public class EnumStringDiscriminator {
   /**
    * enum string type
@@ -104,12 +104,14 @@ public class EnumStringDiscriminator {
 
   public static final String SERIALIZED_NAME_ENUM_STR_TYPE = "enum_str_type";
   @SerializedName(SERIALIZED_NAME_ENUM_STR_TYPE)
+  @javax.annotation.Nonnull
   protected EnumStrTypeEnum enumStrType;
 
   public EnumStringDiscriminator() {
+
   }
 
-  public EnumStringDiscriminator enumStrType(EnumStrTypeEnum enumStrType) {
+  public EnumStringDiscriminator enumStrType(@javax.annotation.Nonnull EnumStrTypeEnum enumStrType) {
     this.enumStrType = enumStrType;
     return this;
   }
@@ -123,7 +125,7 @@ public class EnumStringDiscriminator {
     return enumStrType;
   }
 
-  public void setEnumStrType(EnumStrTypeEnum enumStrType) {
+  public void setEnumStrType(@javax.annotation.Nonnull EnumStrTypeEnum enumStrType) {
     this.enumStrType = enumStrType;
   }
 
@@ -218,12 +220,10 @@ public class EnumStringDiscriminator {
 
   static {
     // a set of all properties/fields (JSON key names)
-    openapiFields = new HashSet<String>();
-    openapiFields.add("enum_str_type");
+    openapiFields = new HashSet<String>(Arrays.asList("enum_str_type"));
 
     // a set of required properties/fields (JSON key names)
-    openapiRequiredFields = new HashSet<String>();
-    openapiRequiredFields.add("enum_str_type");
+    openapiRequiredFields = new HashSet<String>(Arrays.asList("enum_str_type"));
   }
 
   /**

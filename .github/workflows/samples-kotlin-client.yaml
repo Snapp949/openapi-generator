@@ -20,6 +20,7 @@ jobs:
         sample:
           # client
           - samples/client/petstore/kotlin
+          - samples/client/petstore/kotlin-explicit
           - samples/client/petstore/kotlin-gson
           - samples/client/petstore/kotlin-jackson
           - samples/client/petstore/kotlin-model-prefix-type-mappings
@@ -64,6 +65,7 @@ jobs:
           - samples/client/echo_api/kotlin-jvm-spring-3-restclient
           - samples/client/petstore/kotlin-name-parameter-mappings
           - samples/client/others/kotlin-jvm-okhttp-parameter-tests
+          - samples/client/others/kotlin-jvm-okhttp-path-comments
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

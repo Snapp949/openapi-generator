@@ -50,14 +50,16 @@ import org.openapitools.client.JSON;
 /**
  * HasOnlyReadOnly
  */
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.9.0-SNAPSHOT")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.15.0-SNAPSHOT")
 public class HasOnlyReadOnly implements Parcelable {
   public static final String SERIALIZED_NAME_BAR = "bar";
   @SerializedName(SERIALIZED_NAME_BAR)
+  @javax.annotation.Nullable
   private String bar;
 
   public static final String SERIALIZED_NAME_FOO = "foo";
   @SerializedName(SERIALIZED_NAME_FOO)
+  @javax.annotation.Nullable
   private String foo;
 
   public HasOnlyReadOnly() {
@@ -163,12 +165,10 @@ public class HasOnlyReadOnly implements Parcelable {
 
   static {
     // a set of all properties/fields (JSON key names)
-    openapiFields = new HashSet<String>();
-    openapiFields.add("bar");
-    openapiFields.add("foo");
+    openapiFields = new HashSet<String>(Arrays.asList("bar", "foo"));
 
     // a set of required properties/fields (JSON key names)
-    openapiRequiredFields = new HashSet<String>();
+    openapiRequiredFields = new HashSet<String>(0);
   }
 
   /**

@@ -50,14 +50,16 @@ import org.openapitools.client.JSON;
 /**
  * ReadOnlyFirst
  */
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.9.0-SNAPSHOT")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.15.0-SNAPSHOT")
 public class ReadOnlyFirst implements Parcelable {
   public static final String SERIALIZED_NAME_BAR = "bar";
   @SerializedName(SERIALIZED_NAME_BAR)
+  @javax.annotation.Nullable
   private String bar;
 
   public static final String SERIALIZED_NAME_BAZ = "baz";
   @SerializedName(SERIALIZED_NAME_BAZ)
+  @javax.annotation.Nullable
   private String baz;
 
   public ReadOnlyFirst() {
@@ -81,7 +83,7 @@ public class ReadOnlyFirst implements Parcelable {
 
 
 
-  public ReadOnlyFirst baz(String baz) {
+  public ReadOnlyFirst baz(@javax.annotation.Nullable String baz) {
     this.baz = baz;
     return this;
   }
@@ -95,7 +97,7 @@ public class ReadOnlyFirst implements Parcelable {
     return baz;
   }
 
-  public void setBaz(String baz) {
+  public void setBaz(@javax.annotation.Nullable String baz) {
     this.baz = baz;
   }
 
@@ -169,12 +171,10 @@ public class ReadOnlyFirst implements Parcelable {
 
   static {
     // a set of all properties/fields (JSON key names)
-    openapiFields = new HashSet<String>();
-    openapiFields.add("bar");
-    openapiFields.add("baz");
+    openapiFields = new HashSet<String>(Arrays.asList("bar", "baz"));
 
     // a set of required properties/fields (JSON key names)
-    openapiRequiredFields = new HashSet<String>();
+    openapiRequiredFields = new HashSet<String>(0);
   }
 
   /**

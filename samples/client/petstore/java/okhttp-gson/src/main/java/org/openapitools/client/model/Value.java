@@ -52,7 +52,7 @@ import com.google.gson.JsonParseException;
 
 import org.openapitools.client.JSON;
 
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.9.0-SNAPSHOT")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.15.0-SNAPSHOT")
 public class Value extends AbstractOpenApiSchema {
     private static final Logger log = Logger.getLogger(Value.class.getName());
 
@@ -86,7 +86,7 @@ public class Value extends AbstractOpenApiSchema {
                     // check if the actual instance is of the type `List<Scalar>`
                     if (value.getActualInstance() instanceof List<?>) {
                         List<?> list = (List<?>) value.getActualInstance();
-                        if (list.get(0) instanceof Scalar) {
+                        if (!list.isEmpty() && list.get(0) instanceof Scalar) {
                             JsonArray array = adapterListScalar.toJsonTree((List<Scalar>)value.getActualInstance()).getAsJsonArray();
                             elementAdapter.write(out, array);
                             return;
@@ -187,7 +187,7 @@ public class Value extends AbstractOpenApiSchema {
 
         if (instance instanceof List<?>) {
             List<?> list = (List<?>) instance;
-            if (list.get(0) instanceof Scalar) {
+            if (!list.isEmpty() && list.get(0) instanceof Scalar) {
                 super.setActualInstance(instance);
                 return;
             }
@@ -218,6 +218,7 @@ public class Value extends AbstractOpenApiSchema {
     public Scalar getScalar() throws ClassCastException {
         return (Scalar)super.getActualInstance();
     }
+
     /**
      * Get the actual instance of `List<Scalar>`. If the actual instance is not `List<Scalar>`,
      * the ClassCastException will be thrown.

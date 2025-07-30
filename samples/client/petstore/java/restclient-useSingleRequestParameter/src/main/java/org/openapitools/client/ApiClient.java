@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TimeZone;
+import java.util.function.Supplier;
 
 import jakarta.annotation.Nullable;
 
@@ -57,57 +58,54 @@ import org.openapitools.client.auth.HttpBearerAuth;
 import org.openapitools.client.auth.ApiKeyAuth;
 import org.openapitools.client.auth.OAuth;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.9.0-SNAPSHOT")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.15.0-SNAPSHOT")
 public class ApiClient extends JavaTimeFormatter {
     public enum CollectionFormat {
         CSV(","), TSV("\t"), SSV(" "), PIPES("|"), MULTI(null);
 
-        private final String separator;
+        protected final String separator;
         CollectionFormat(String separator) {
             this.separator = separator;
         }
 
-        private String collectionToString(Collection<?> collection) {
+        protected String collectionToString(Collection<?> collection) {
             return StringUtils.collectionToDelimitedString(collection, separator);
         }
     }
 
-    private final HttpHeaders defaultHeaders = new HttpHeaders();
-    private final MultiValueMap<String, String> defaultCookies = new LinkedMultiValueMap<>();
+    protected final HttpHeaders defaultHeaders = new HttpHeaders();
+    protected final MultiValueMap<String, String> defaultCookies = new LinkedMultiValueMap<>();
 
-    private String basePath = "http://petstore.swagger.io:80/v2";
+    protected String basePath = "http://petstore.swagger.io:80/v2";
 
-    private final RestClient restClient;
-    private final DateFormat dateFormat;
-    private final ObjectMapper objectMapper;
+    protected final RestClient restClient;
+    protected final DateFormat dateFormat;
+    protected final ObjectMapper objectMapper;
 
-    private Map<String, Authentication> authentications;
+    protected Map<String, Authentication> authentications;
 
 
     public ApiClient() {
-        this.dateFormat = createDefaultDateFormat();
-        this.objectMapper = createDefaultObjectMapper(this.dateFormat);
-        this.restClient = buildRestClient(this.objectMapper);
-        this.init();
+        this(null);
     }
 
     public ApiClient(RestClient restClient) {
-        this(Optional.ofNullable(restClient).orElseGet(ApiClient::buildRestClient), createDefaultDateFormat());
+        this(restClient, createDefaultDateFormat());
     }
 
     public ApiClient(ObjectMapper mapper, DateFormat format) {
-        this(buildRestClient(mapper.copy()), format);
+        this(null, mapper, format);
     }
 
     public ApiClient(RestClient restClient, ObjectMapper mapper, DateFormat format) {
-        this(Optional.ofNullable(restClient).orElseGet(() -> buildRestClient(mapper.copy())), format);
+        this.objectMapper = mapper.copy();
+        this.restClient = Optional.ofNullable(restClient).orElseGet(() -> buildRestClient(this.objectMapper));
+        this.dateFormat = format;
+        this.init();
     }
 
-    private ApiClient(RestClient restClient, DateFormat format) {
-        this.restClient = restClient;
-        this.dateFormat = format;
-        this.objectMapper = createDefaultObjectMapper(format);
-        this.init();
+    protected ApiClient(RestClient restClient, DateFormat format) {
+        this(restClient, createDefaultObjectMapper(format), format);
     }
 
     public static DateFormat createDefaultDateFormat() {
@@ -148,7 +146,7 @@ public class ApiClient extends JavaTimeFormatter {
     */
     public static RestClient.Builder buildRestClientBuilder(ObjectMapper mapper) {
         Consumer<List<HttpMessageConverter<?>>> messageConverters = converters -> {
-            converters.add(new MappingJackson2HttpMessageConverter(mapper));
+            converters.add(0, new MappingJackson2HttpMessageConverter(mapper));
         };
 
         return RestClient.builder().messageConverters(messageConverters);
@@ -224,6 +222,21 @@ public class ApiClient extends JavaTimeFormatter {
             if (auth instanceof HttpBearerAuth) {
                 ((HttpBearerAuth) auth).setBearerToken(bearerToken);
                 return;
+            }
+        }
+        throw new RuntimeException("No Bearer authentication configured!");
+    }
+
+    /**
+    * Helper method to set the supplier of access tokens for Bearer authentication.
+    *
+    * @param tokenSupplier the token supplier function
+    */
+    public void setBearerToken(Supplier<String> tokenSupplier) {
+        for (Authentication auth : authentications.values()) {
+            if (auth instanceof HttpBearerAuth) {
+                ((HttpBearerAuth) auth).setBearerToken(tokenSupplier);
+            return;
             }
         }
         throw new RuntimeException("No Bearer authentication configured!");
@@ -585,7 +598,7 @@ public class ApiClient extends JavaTimeFormatter {
      * @param uriParams The path parameters
      * return templatized query string
      */
-    private String generateQueryUri(MultiValueMap<String, String> queryParams, Map<String, Object> uriParams) {
+    protected String generateQueryUri(MultiValueMap<String, String> queryParams, Map<String, Object> uriParams) {
         StringBuilder queryBuilder = new StringBuilder();
         queryParams.forEach((name, values) -> {
             if (CollectionUtils.isEmpty(values)) {
@@ -611,13 +624,13 @@ public class ApiClient extends JavaTimeFormatter {
         return queryBuilder.toString();
     }
 
-    private RestClient.RequestBodySpec prepareRequest(String path, HttpMethod method, Map<String, Object> pathParams,
+    protected RestClient.RequestBodySpec prepareRequest(String path, HttpMethod method, Map<String, Object> pathParams,
         MultiValueMap<String, String> queryParams, Object body, HttpHeaders headerParams,
         MultiValueMap<String, String> cookieParams, MultiValueMap<String, Object> formParams, List<MediaType> accept,
         MediaType contentType, String[] authNames) {
         updateParamsForAuth(authNames, queryParams, headerParams, cookieParams);
 
-        final UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(basePath).path(path);
+        final UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(basePath).path(path);
 
         String finalUri = builder.build(false).toUriString();
         Map<String, Object> uriParams = new HashMap<>();
@@ -643,6 +656,18 @@ public class ApiClient extends JavaTimeFormatter {
         addHeadersToRequest(defaultHeaders, requestBuilder);
         addCookiesToRequest(cookieParams, requestBuilder);
         addCookiesToRequest(defaultCookies, requestBuilder);
+
+        if (MediaType.MULTIPART_FORM_DATA.isCompatibleWith(contentType)) {
+            formParams.forEach(
+                    (k, v) -> {
+                        if (v instanceof java.util.ArrayList) {
+                            Object o = v.get(0);
+                            if (o != null && o.getClass().getEnumConstants() != null) {
+                                v.set(0, o.toString());
+                            }
+                        }
+                    });
+        }
 
         var selectedBody = selectBody(body, formParams, contentType);
         if (selectedBody != null) {
@@ -687,7 +712,7 @@ public class ApiClient extends JavaTimeFormatter {
      * @param cookies map all cookies
      * @return header string for cookies.
      */
-    private String buildCookieHeader(MultiValueMap<String, String> cookies) {
+    protected String buildCookieHeader(MultiValueMap<String, String> cookies) {
         final StringBuilder cookieValue = new StringBuilder();
         String delimiter = "";
         for (final Map.Entry<String, List<String>> entry : cookies.entrySet()) {

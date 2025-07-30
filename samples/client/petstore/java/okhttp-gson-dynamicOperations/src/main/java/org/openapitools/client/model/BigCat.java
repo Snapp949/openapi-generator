@@ -49,7 +49,7 @@ import org.openapitools.client.JSON;
 /**
  * BigCat
  */
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.9.0-SNAPSHOT")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.15.0-SNAPSHOT")
 public class BigCat extends Cat {
   /**
    * Gets or Sets kind
@@ -109,13 +109,14 @@ public class BigCat extends Cat {
 
   public static final String SERIALIZED_NAME_KIND = "kind";
   @SerializedName(SERIALIZED_NAME_KIND)
+  @javax.annotation.Nullable
   private KindEnum kind;
 
   public BigCat() {
     this.className = this.getClass().getSimpleName();
   }
 
-  public BigCat kind(KindEnum kind) {
+  public BigCat kind(@javax.annotation.Nullable KindEnum kind) {
     this.kind = kind;
     return this;
   }
@@ -129,7 +130,7 @@ public class BigCat extends Cat {
     return kind;
   }
 
-  public void setKind(KindEnum kind) {
+  public void setKind(@javax.annotation.Nullable KindEnum kind) {
     this.kind = kind;
   }
 
@@ -180,15 +181,10 @@ public class BigCat extends Cat {
 
   static {
     // a set of all properties/fields (JSON key names)
-    openapiFields = new HashSet<String>();
-    openapiFields.add("className");
-    openapiFields.add("color");
-    openapiFields.add("declawed");
-    openapiFields.add("kind");
+    openapiFields = new HashSet<String>(Arrays.asList("className", "color", "declawed", "kind"));
 
     // a set of required properties/fields (JSON key names)
-    openapiRequiredFields = new HashSet<String>();
-    openapiRequiredFields.add("className");
+    openapiRequiredFields = new HashSet<String>(Arrays.asList("className"));
   }
 
   /**

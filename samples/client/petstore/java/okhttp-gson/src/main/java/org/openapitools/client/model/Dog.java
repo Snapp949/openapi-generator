@@ -49,17 +49,18 @@ import org.openapitools.client.JSON;
 /**
  * Dog
  */
-@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.9.0-SNAPSHOT")
+@javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.15.0-SNAPSHOT")
 public class Dog extends Animal {
   public static final String SERIALIZED_NAME_BREED = "breed";
   @SerializedName(SERIALIZED_NAME_BREED)
+  @javax.annotation.Nullable
   private String breed;
 
   public Dog() {
     this.className = this.getClass().getSimpleName();
   }
 
-  public Dog breed(String breed) {
+  public Dog breed(@javax.annotation.Nullable String breed) {
     this.breed = breed;
     return this;
   }
@@ -73,7 +74,7 @@ public class Dog extends Animal {
     return breed;
   }
 
-  public void setBreed(String breed) {
+  public void setBreed(@javax.annotation.Nullable String breed) {
     this.breed = breed;
   }
 
@@ -170,14 +171,10 @@ public class Dog extends Animal {
 
   static {
     // a set of all properties/fields (JSON key names)
-    openapiFields = new HashSet<String>();
-    openapiFields.add("className");
-    openapiFields.add("color");
-    openapiFields.add("breed");
+    openapiFields = new HashSet<String>(Arrays.asList("className", "color", "breed"));
 
     // a set of required properties/fields (JSON key names)
-    openapiRequiredFields = new HashSet<String>();
-    openapiRequiredFields.add("className");
+    openapiRequiredFields = new HashSet<String>(Arrays.asList("className"));
   }
 
   /**

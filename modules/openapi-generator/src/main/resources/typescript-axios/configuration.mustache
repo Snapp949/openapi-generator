@@ -2,6 +2,7 @@
 /* eslint-disable */
 {{>licenseInfo}}
 
+
 export interface ConfigurationParameters {
     apiKey?: string | Promise<string> | ((name: string) => string) | ((name: string) => Promise<string>);
     username?: string;
@@ -78,7 +79,15 @@ export class Configuration {
         this.accessToken = param.accessToken;
         this.basePath = param.basePath;
         this.serverIndex = param.serverIndex;
-        this.baseOptions = param.baseOptions;
+        this.baseOptions = {
+            ...param.baseOptions,
+            headers: {
+                {{#httpUserAgent}}
+                'User-Agent': "{{httpUserAgent}}",
+                {{/httpUserAgent}}
+                ...param.baseOptions?.headers,
+            },
+        };
         this.formDataCtor = param.formDataCtor;
     }
 
