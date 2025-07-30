@@ -3,87 +3,91 @@ import { NextResponse } from "next/server"
 // Mock AI bot data
 const mockBots = [
   {
-    id: "bot-001",
-    name: "Momentum Trader",
-    strategy: "Technical Analysis + Momentum",
-    status: "active" as const,
-    performance: 12.5,
-    lastRun: "2 minutes ago",
+    id: "bot-1",
+    name: "Quantum Arbitrage",
+    strategy: "Cross-exchange arbitrage with quantum optimization",
+    status: "active",
+    performance: {
+      totalReturn: 24.5,
+      dailyReturn: 1.2,
+      winRate: 78.5,
+      sharpeRatio: 2.1,
+    },
+    allocation: 50000,
+    trades: 1247,
+    lastActive: Date.now() - 300000, // 5 minutes ago
   },
   {
-    id: "bot-002",
-    name: "Arbitrage Hunter",
-    strategy: "Cross-Exchange Arbitrage",
-    status: "active" as const,
-    performance: 8.3,
-    lastRun: "1 minute ago",
+    id: "bot-2",
+    name: "Neural Momentum",
+    strategy: "Deep learning momentum trading",
+    status: "active",
+    performance: {
+      totalReturn: 18.7,
+      dailyReturn: 0.8,
+      winRate: 72.3,
+      sharpeRatio: 1.8,
+    },
+    allocation: 35000,
+    trades: 892,
+    lastActive: Date.now() - 120000, // 2 minutes ago
   },
   {
-    id: "bot-003",
-    name: "DeFi Yield Optimizer",
-    strategy: "Yield Farming + Liquidity Mining",
-    status: "inactive" as const,
-    performance: -2.1,
-    lastRun: "1 hour ago",
-  },
-  {
-    id: "bot-004",
-    name: "Market Maker Pro",
-    strategy: "Grid Trading + Market Making",
-    status: "active" as const,
-    performance: 15.7,
-    lastRun: "30 seconds ago",
-  },
-  {
-    id: "bot-005",
+    id: "bot-3",
     name: "Sentiment Analyzer",
-    strategy: "AI Sentiment + News Analysis",
-    status: "error" as const,
-    performance: 5.2,
-    lastRun: "5 minutes ago",
+    strategy: "Social sentiment and news analysis",
+    status: "paused",
+    performance: {
+      totalReturn: 12.3,
+      dailyReturn: 0.4,
+      winRate: 65.8,
+      sharpeRatio: 1.4,
+    },
+    allocation: 25000,
+    trades: 634,
+    lastActive: Date.now() - 3600000, // 1 hour ago
   },
 ]
 
 export async function GET() {
   try {
-    // Simulate some randomness in performance
-    const botsWithUpdatedPerformance = mockBots.map((bot) => ({
+    // Add some random variation to performance metrics
+    const botsWithVariation = mockBots.map((bot) => ({
       ...bot,
-      performance: bot.performance + (Math.random() - 0.5) * 2, // Small random variation
+      performance: {
+        ...bot.performance,
+        dailyReturn: bot.performance.dailyReturn + (Math.random() - 0.5) * 0.5,
+        totalReturn: bot.performance.totalReturn + (Math.random() - 0.5) * 2,
+      },
     }))
 
-    return NextResponse.json(botsWithUpdatedPerformance)
+    return NextResponse.json({
+      success: true,
+      data: botsWithVariation,
+      timestamp: Date.now(),
+    })
   } catch (error) {
-    console.error("Error fetching AI bots:", error)
-    return NextResponse.json({ error: "Failed to fetch AI bots" }, { status: 500 })
+    console.error("AI bots API error:", error)
+    return NextResponse.json({ success: false, error: "Failed to fetch AI bots data" }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const { botId, action } = await request.json()
+    const { action, botId } = await request.json()
 
-    if (!botId || !action) {
-      return NextResponse.json({ error: "Missing botId or action" }, { status: 400 })
+    // Mock bot control actions
+    if (action === "start" || action === "pause" || action === "stop") {
+      return NextResponse.json({
+        success: true,
+        message: `Bot ${botId} ${action}ed successfully`,
+        timestamp: Date.now(),
+      })
     }
 
-    // Simulate bot action processing
-    console.log(`Processing ${action} action for bot ${botId}`)
-
-    // In a real application, this would update the bot status in a database
-    const updatedBot = mockBots.find((bot) => bot.id === botId)
-    if (updatedBot) {
-      updatedBot.status = action === "start" ? "active" : "inactive"
-      updatedBot.lastRun = "just now"
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: `Bot ${action} action completed successfully`,
-      botId,
-    })
+    return NextResponse.json({ success: false, error: "Invalid action" }, { status: 400 })
   } catch (error) {
-    console.error("Error processing bot action:", error)
-    return NextResponse.json({ error: "Failed to process bot action" }, { status: 500 })
+    console.error("AI bots control error:", error)
+    return NextResponse.json({ success: false, error: "Failed to control bot" }, { status: 500 })
   }
 }

@@ -1,138 +1,200 @@
 "use client"
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { TrendingUp, BarChart3 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { TrendingUp, TrendingDown, Activity } from "lucide-react"
+import { useDaxMarketData } from "@/hooks/use-dax-market-data"
 
-interface HistoricalDataPoint {
-  name: string
-  BTC: number
-  ETH: number
-  SOL: number
+interface ChartData {
+  time: string
+  price: number
+  volume: number
 }
 
-interface MarketChartProps {
-  data: HistoricalDataPoint[]
-  title: string
-  description: string
-}
+export function MarketChart() {
+  const { data, loading, error } = useDaxMarketData()
+  const [selectedSymbol, setSelectedSymbol] = useState("BTC")
+  const [timeframe, setTimeframe] = useState("1H")
+  const [chartData, setChartData] = useState<ChartData[]>([])
 
-export function MarketChart({ data, title, description }: MarketChartProps) {
-  const formatCurrency = (value: number) => {
-    if (value >= 1000) {
-      return `$${(value / 1000).toFixed(1)}K`
+  // Generate mock chart data
+  useEffect(() => {
+    const generateChartData = () => {
+      const points = 50
+      const mockData: ChartData[] = []
+      const basePrice = selectedSymbol === "BTC" ? 43000 : selectedSymbol === "ETH" ? 2600 : 100
+
+      for (let i = 0; i < points; i++) {
+        const time = new Date(Date.now() - (points - i) * 60000).toLocaleTimeString()
+        const variation = (Math.random() - 0.5) * 0.02
+        const price = basePrice * (1 + variation * (i / points))
+        const volume = Math.random() * 1000000
+
+        mockData.push({ time, price, volume })
+      }
+
+      setChartData(mockData)
     }
-    return `$${value.toFixed(0)}`
+
+    generateChartData()
+    const interval = setInterval(generateChartData, 5000)
+    return () => clearInterval(interval)
+  }, [selectedSymbol])
+
+  const selectedData = data.find((item) => item.symbol === selectedSymbol)
+  const isPositive = selectedData ? Number.parseFloat(selectedData.change) > 0 : false
+
+  if (loading) {
+    return (
+      <Card className="bg-black/40 border-cyan-500/20">
+        <CardContent className="p-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-cyan-500/20 rounded w-1/4"></div>
+            <div className="h-64 bg-cyan-500/10 rounded"></div>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-slate-800 border border-slate-600 rounded-lg p-3 shadow-lg">
-          <p className="text-slate-300 text-sm mb-2">{`Time: ${label}`}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {`${entry.dataKey}: ${formatCurrency(entry.value)}`}
-            </p>
-          ))}
-        </div>
-      )
-    }
-    return null
+  if (error) {
+    return (
+      <Card className="bg-black/40 border-red-500/20">
+        <CardContent className="p-6 text-center">
+          <p className="text-red-400">Error loading chart data: {error}</p>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
-      <CardHeader>
+    <Card className="bg-black/40 border-cyan-500/20 backdrop-blur-sm">
+      <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-white flex items-center">
-              <BarChart3 className="w-5 h-5 mr-2 text-blue-400" />
-              {title}
+          <div className="flex items-center gap-4">
+            <CardTitle className="text-cyan-400 flex items-center gap-2">
+              <Activity className="w-5 h-5" />
+              Market Chart
             </CardTitle>
-            <p className="text-slate-400 text-sm mt-1">{description}</p>
+            <div className="flex gap-2">
+              {data.slice(0, 4).map((item) => (
+                <Button
+                  key={item.symbol}
+                  variant={selectedSymbol === item.symbol ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedSymbol(item.symbol)}
+                  className={
+                    selectedSymbol === item.symbol
+                      ? "bg-cyan-500 text-black"
+                      : "border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                  }
+                >
+                  {item.symbol}
+                </Button>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" className="border-slate-600 bg-transparent text-slate-300">
-              1H
-            </Button>
-            <Button size="sm" variant="outline" className="border-slate-600 bg-transparent text-slate-300">
-              24H
-            </Button>
-            <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-              7D
-            </Button>
+          <div className="flex gap-2">
+            {["1H", "4H", "1D", "1W"].map((tf) => (
+              <Button
+                key={tf}
+                variant={timeframe === tf ? "default" : "outline"}
+                size="sm"
+                onClick={() => setTimeframe(tf)}
+                className={
+                  timeframe === tf ? "bg-blue-500 text-white" : "border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
+                }
+              >
+                {tf}
+              </Button>
+            ))}
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={data}
-            margin={{
-              top: 5,
-              right: 30,
-              left: 20,
-              bottom: 5,
-            }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-            <XAxis dataKey="name" stroke="#9CA3AF" fontSize={12} tickLine={false} axisLine={false} />
-            <YAxis stroke="#9CA3AF" fontSize={12} tickLine={false} axisLine={false} tickFormatter={formatCurrency} />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend wrapperStyle={{ color: "#E5E7EB", paddingTop: "20px" }} iconType="line" />
-            <Line
-              type="monotone"
-              dataKey="BTC"
-              stroke="#F59E0B"
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 6, stroke: "#F59E0B", strokeWidth: 2, fill: "#1F2937" }}
-              name="Bitcoin"
-            />
-            <Line
-              type="monotone"
-              dataKey="ETH"
-              stroke="#10B981"
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 6, stroke: "#10B981", strokeWidth: 2, fill: "#1F2937" }}
-              name="Ethereum"
-            />
-            <Line
-              type="monotone"
-              dataKey="SOL"
-              stroke="#8B5CF6"
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 6, stroke: "#8B5CF6", strokeWidth: 2, fill: "#1F2937" }}
-              name="Solana"
-            />
-          </LineChart>
-        </ResponsiveContainer>
 
-        {/* Market Indices */}
-        <div className="grid grid-cols-2 gap-4 mt-6 pt-4 border-t border-slate-700">
-          <div className="bg-slate-900/70 p-4 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-blue-300 font-semibold text-sm">DAX 500 Index</h4>
-              <TrendingUp className="w-4 h-4 text-green-400" />
+        {selectedData && (
+          <div className="flex items-center gap-4 mt-4">
+            <div className="text-2xl font-bold text-white">
+              ${Number.parseFloat(selectedData.price).toLocaleString()}
             </div>
-            <p className="text-2xl font-bold text-white">
-              12,345.67 <span className="text-green-400 text-base ml-2">+1.23%</span>
-            </p>
-            <p className="text-slate-400 text-xs mt-1">Weighted average of top 500 digital assets</p>
+            <Badge
+              variant={isPositive ? "default" : "destructive"}
+              className={
+                isPositive
+                  ? "bg-green-500/20 text-green-400 border-green-500/30"
+                  : "bg-red-500/20 text-red-400 border-red-500/30"
+              }
+            >
+              {isPositive ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
+              {selectedData.change}%
+            </Badge>
+            <div className="text-sm text-gray-400">Vol: ${Number.parseInt(selectedData.volume).toLocaleString()}</div>
           </div>
-          <div className="bg-slate-900/70 p-4 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <h4 className="text-purple-300 font-semibold text-sm">DeFi Pulse Index</h4>
-              <TrendingUp className="w-4 h-4 text-red-400 rotate-180" />
+        )}
+      </CardHeader>
+
+      <CardContent>
+        <div className="h-64 relative">
+          {/* Simple SVG Chart */}
+          <svg className="w-full h-full" viewBox="0 0 800 200">
+            <defs>
+              <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="rgb(34, 197, 94)" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="rgb(34, 197, 94)" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+
+            {/* Grid lines */}
+            {[0, 1, 2, 3, 4].map((i) => (
+              <line
+                key={i}
+                x1="0"
+                y1={i * 50}
+                x2="800"
+                y2={i * 50}
+                stroke="rgb(34, 197, 94)"
+                strokeOpacity="0.1"
+                strokeWidth="1"
+              />
+            ))}
+
+            {/* Chart line */}
+            {chartData.length > 1 && (
+              <>
+                <path
+                  d={`M ${chartData
+                    .map(
+                      (point, index) =>
+                        `${(index / (chartData.length - 1)) * 800},${200 - (point.price / Math.max(...chartData.map((p) => p.price))) * 180}`,
+                    )
+                    .join(" L ")}`}
+                  fill="url(#chartGradient)"
+                  stroke="rgb(34, 197, 94)"
+                  strokeWidth="2"
+                  fillOpacity="0.3"
+                />
+                <path
+                  d={`M ${chartData
+                    .map(
+                      (point, index) =>
+                        `${(index / (chartData.length - 1)) * 800},${200 - (point.price / Math.max(...chartData.map((p) => p.price))) * 180}`,
+                    )
+                    .join(" L ")}`}
+                  fill="none"
+                  stroke="rgb(34, 197, 94)"
+                  strokeWidth="2"
+                />
+              </>
+            )}
+          </svg>
+
+          {/* Chart overlay info */}
+          <div className="absolute top-4 right-4 bg-black/60 rounded-lg p-3 text-sm">
+            <div className="text-gray-400">24h Range</div>
+            <div className="text-white">
+              ${selectedData?.low24h} - ${selectedData?.high24h}
             </div>
-            <p className="text-2xl font-bold text-white">
-              4,567.89 <span className="text-red-400 text-base ml-2">-0.45%</span>
-            </p>
-            <p className="text-slate-400 text-xs mt-1">Performance of leading DeFi protocols</p>
           </div>
         </div>
       </CardContent>

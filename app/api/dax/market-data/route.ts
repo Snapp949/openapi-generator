@@ -1,139 +1,49 @@
 import { NextResponse } from "next/server"
 
-// Mock data generators
-function generatePrice(basePrice: number, volatility = 0.05): number {
-  const change = (Math.random() - 0.5) * 2 * volatility
-  return basePrice * (1 + change)
-}
-
-function generateHistoricalData() {
-  const data = []
-  const now = new Date()
-
-  for (let i = 23; i >= 0; i--) {
-    const time = new Date(now.getTime() - i * 60 * 60 * 1000)
-    data.push({
-      name: time.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
-      BTC: generatePrice(68000, 0.02),
-      ETH: generatePrice(3900, 0.03),
-      SOL: generatePrice(205, 0.04),
-    })
+// Mock market data - in production, this would connect to real APIs
+const generateMockData = () => {
+  const symbols = ["BTC", "ETH", "ADA", "SOL", "MATIC", "DOT", "LINK", "UNI"]
+  const baseData = {
+    BTC: { price: 43250, change: 2.5 },
+    ETH: { price: 2650, change: -1.2 },
+    ADA: { price: 0.48, change: 3.8 },
+    SOL: { price: 98.5, change: 5.2 },
+    MATIC: { price: 0.85, change: -0.8 },
+    DOT: { price: 7.2, change: 1.9 },
+    LINK: { price: 15.8, change: -2.1 },
+    UNI: { price: 6.4, change: 4.3 },
   }
 
-  return data
-}
+  return symbols.map((symbol) => {
+    const base = baseData[symbol as keyof typeof baseData]
+    const variation = (Math.random() - 0.5) * 0.1
+    const price = base.price * (1 + variation)
+    const change = base.change + (Math.random() - 0.5) * 2
 
-function generateOrderBook() {
-  const bids = []
-  const asks = []
-  const basePrice = 68000
-
-  // Generate 10 bid orders (buy orders below current price)
-  for (let i = 0; i < 10; i++) {
-    const price = basePrice - (i + 1) * 50
-    const amount = Math.random() * 2 + 0.1
-    bids.push({
-      price,
-      amount,
-      total: price * amount,
-    })
-  }
-
-  // Generate 10 ask orders (sell orders above current price)
-  for (let i = 0; i < 10; i++) {
-    const price = basePrice + (i + 1) * 50
-    const amount = Math.random() * 2 + 0.1
-    asks.push({
-      price,
-      amount,
-      total: price * amount,
-    })
-  }
-
-  return { bids, asks }
-}
-
-function generateRecentTrades() {
-  const trades = []
-  const now = new Date()
-
-  for (let i = 0; i < 20; i++) {
-    const time = new Date(now.getTime() - i * 30000) // 30 seconds apart
-    trades.push({
-      time: time.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
-      price: generatePrice(68000, 0.001),
-      amount: Math.random() * 0.5 + 0.01,
-      type: Math.random() > 0.5 ? "buy" : "sell",
-    })
-  }
-
-  return trades
+    return {
+      symbol,
+      price: price.toFixed(symbol === "BTC" ? 0 : symbol === "ETH" ? 0 : 4),
+      change: change.toFixed(2),
+      volume: (Math.random() * 1000000).toFixed(0),
+      marketCap: (price * Math.random() * 100000000).toFixed(0),
+      high24h: (price * 1.05).toFixed(symbol === "BTC" ? 0 : symbol === "ETH" ? 0 : 4),
+      low24h: (price * 0.95).toFixed(symbol === "BTC" ? 0 : symbol === "ETH" ? 0 : 4),
+      timestamp: Date.now(),
+    }
+  })
 }
 
 export async function GET() {
   try {
-    const marketData = [
-      {
-        symbol: "BTC",
-        name: "Bitcoin",
-        price: generatePrice(68123.45),
-        change: (Math.random() - 0.5) * 10,
-        volume: "32.1B",
-        marketCap: "1.34T",
-      },
-      {
-        symbol: "ETH",
-        name: "Ethereum",
-        price: generatePrice(3921.78),
-        change: (Math.random() - 0.5) * 8,
-        volume: "18.5B",
-        marketCap: "471B",
-      },
-      {
-        symbol: "SOL",
-        name: "Solana",
-        price: generatePrice(205.67),
-        change: (Math.random() - 0.5) * 12,
-        volume: "4.1B",
-        marketCap: "95.8B",
-      },
-      {
-        symbol: "BNB",
-        name: "Binance Coin",
-        price: generatePrice(612.34),
-        change: (Math.random() - 0.5) * 6,
-        volume: "2.8B",
-        marketCap: "92.5B",
-      },
-      {
-        symbol: "XRP",
-        name: "Ripple",
-        price: generatePrice(0.521),
-        change: (Math.random() - 0.5) * 8,
-        volume: "1.5B",
-        marketCap: "28.1B",
-      },
-      {
-        symbol: "ADA",
-        name: "Cardano",
-        price: generatePrice(0.4678),
-        change: (Math.random() - 0.5) * 10,
-        volume: "1.2B",
-        marketCap: "16.5B",
-      },
-    ]
+    const marketData = generateMockData()
 
-    const response = {
-      currentMarketData: marketData,
-      historicalData: generateHistoricalData(),
-      orderBook: generateOrderBook(),
-      recentTrades: generateRecentTrades(),
-      timestamp: new Date().toISOString(),
-    }
-
-    return NextResponse.json(response)
+    return NextResponse.json({
+      success: true,
+      data: marketData,
+      timestamp: Date.now(),
+    })
   } catch (error) {
-    console.error("Error generating market data:", error)
-    return NextResponse.json({ error: "Failed to fetch market data" }, { status: 500 })
+    console.error("Market data API error:", error)
+    return NextResponse.json({ success: false, error: "Failed to fetch market data" }, { status: 500 })
   }
 }

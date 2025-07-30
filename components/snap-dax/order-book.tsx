@@ -1,9 +1,9 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { BookOpen, TrendingUp } from "lucide-react"
+import { BookOpen, TrendingUp, TrendingDown } from "lucide-react"
 
 interface OrderBookEntry {
   price: number
@@ -11,97 +11,147 @@ interface OrderBookEntry {
   total: number
 }
 
-interface OrderBookProps {
+interface OrderBookData {
   bids: OrderBookEntry[]
   asks: OrderBookEntry[]
+  spread: number
+  lastPrice: number
 }
 
-export function OrderBook({ bids, asks }: OrderBookProps) {
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value)
+export function OrderBook() {
+  const [orderBook, setOrderBook] = useState<OrderBookData | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const formatAmount = (value: number) => value.toFixed(4)
+  useEffect(() => {
+    const generateOrderBook = (): OrderBookData => {
+      const lastPrice = 43250 + (Math.random() - 0.5) * 100
+      const spread = 5 + Math.random() * 10
 
-  // Calculate spread
-  const bestBid = Math.max(...bids.map((b) => b.price))
-  const bestAsk = Math.min(...asks.map((a) => a.price))
-  const spread = bestAsk - bestBid
-  const spreadPercent = ((spread / bestBid) * 100).toFixed(3)
+      const bids: OrderBookEntry[] = []
+      const asks: OrderBookEntry[] = []
+
+      // Generate bids (buy orders) - below last price
+      for (let i = 0; i < 10; i++) {
+        const price = lastPrice - spread / 2 - i * 2
+        const amount = Math.random() * 5 + 0.1
+        const total = price * amount
+        bids.push({ price, amount, total })
+      }
+
+      // Generate asks (sell orders) - above last price
+      for (let i = 0; i < 10; i++) {
+        const price = lastPrice + spread / 2 + i * 2
+        const amount = Math.random() * 5 + 0.1
+        const total = price * amount
+        asks.push({ price, amount, total })
+      }
+
+      return { bids, asks, spread, lastPrice }
+    }
+
+    const updateOrderBook = () => {
+      setOrderBook(generateOrderBook())
+      setLoading(false)
+    }
+
+    updateOrderBook()
+    const interval = setInterval(updateOrderBook, 2000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  if (loading || !orderBook) {
+    return (
+      <Card className="bg-black/40 border-cyan-500/20">
+        <CardContent className="p-6">
+          <div className="animate-pulse space-y-2">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="h-4 bg-cyan-500/20 rounded"></div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const maxTotal = Math.max(...orderBook.bids.map((b) => b.total), ...orderBook.asks.map((a) => a.total))
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-white flex items-center text-lg">
-            <BookOpen className="w-5 h-5 mr-2 text-blue-400" />
-            Order Book
-          </CardTitle>
-          <Badge variant="outline" className="border-slate-600 text-slate-300">
-            Spread: {formatCurrency(spread)} ({spreadPercent}%)
+    <Card className="bg-black/40 border-cyan-500/20 backdrop-blur-sm">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-cyan-400 flex items-center gap-2">
+          <BookOpen className="w-5 h-5" />
+          Order Book
+        </CardTitle>
+        <div className="flex items-center gap-4 text-sm">
+          <div className="text-white">Last: ${orderBook.lastPrice.toFixed(2)}</div>
+          <Badge variant="outline" className="border-yellow-500/30 text-yellow-400">
+            Spread: ${orderBook.spread.toFixed(2)}
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="text-sm">
-        {/* Header */}
-        <div className="grid grid-cols-3 text-slate-400 font-semibold mb-3 text-xs uppercase tracking-wider">
-          <span>Price (USD)</span>
-          <span className="text-right">Amount</span>
-          <span className="text-right">Total</span>
-        </div>
 
-        <Separator className="bg-slate-700 mb-3" />
-
-        {/* Asks (Sell Orders) */}
-        <div className="space-y-1 mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-3 h-3 text-red-400 rotate-180" />
-            <span className="text-red-400 text-xs font-medium">SELL ORDERS</span>
-          </div>
-          {asks
-            .sort((a, b) => b.price - a.price) // Highest price first for asks
-            .slice(0, 8)
-            .map((order, index) => (
-              <div
-                key={`ask-${index}`}
-                className="grid grid-cols-3 text-red-400 hover:bg-red-500/10 px-2 py-1 rounded transition-colors"
-              >
-                <span className="font-mono">{formatCurrency(order.price)}</span>
-                <span className="text-right font-mono">{formatAmount(order.amount)}</span>
-                <span className="text-right font-mono text-slate-300">{formatCurrency(order.total)}</span>
+      <CardContent className="p-0">
+        <div className="grid grid-cols-2 gap-0">
+          {/* Bids (Buy Orders) */}
+          <div className="border-r border-cyan-500/20">
+            <div className="p-3 border-b border-cyan-500/20">
+              <div className="flex items-center gap-2 text-sm font-medium text-green-400">
+                <TrendingUp className="w-4 h-4" />
+                Bids
               </div>
-            ))}
-        </div>
-
-        {/* Current Price */}
-        <div className="bg-slate-700/50 rounded-lg p-3 mb-4 text-center">
-          <div className="text-white font-bold text-lg">{formatCurrency(bestBid + spread / 2)}</div>
-          <div className="text-slate-400 text-xs">Last Price</div>
-        </div>
-
-        {/* Bids (Buy Orders) */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-3 h-3 text-green-400" />
-            <span className="text-green-400 text-xs font-medium">BUY ORDERS</span>
-          </div>
-          {bids
-            .sort((a, b) => b.price - a.price) // Highest price first for bids
-            .slice(0, 8)
-            .map((order, index) => (
-              <div
-                key={`bid-${index}`}
-                className="grid grid-cols-3 text-green-400 hover:bg-green-500/10 px-2 py-1 rounded transition-colors"
-              >
-                <span className="font-mono">{formatCurrency(order.price)}</span>
-                <span className="text-right font-mono">{formatAmount(order.amount)}</span>
-                <span className="text-right font-mono text-slate-300">{formatCurrency(order.total)}</span>
+              <div className="grid grid-cols-3 gap-2 text-xs text-gray-400 mt-2">
+                <div>Price</div>
+                <div>Amount</div>
+                <div>Total</div>
               </div>
-            ))}
+            </div>
+            <div className="max-h-64 overflow-y-auto">
+              {orderBook.bids.map((bid, index) => (
+                <div key={index} className="relative p-2 hover:bg-green-500/5">
+                  <div
+                    className="absolute inset-0 bg-green-500/10"
+                    style={{ width: `${(bid.total / maxTotal) * 100}%` }}
+                  />
+                  <div className="relative grid grid-cols-3 gap-2 text-xs">
+                    <div className="text-green-400 font-mono">${bid.price.toFixed(2)}</div>
+                    <div className="text-white font-mono">{bid.amount.toFixed(4)}</div>
+                    <div className="text-gray-400 font-mono">${bid.total.toFixed(0)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Asks (Sell Orders) */}
+          <div>
+            <div className="p-3 border-b border-cyan-500/20">
+              <div className="flex items-center gap-2 text-sm font-medium text-red-400">
+                <TrendingDown className="w-4 h-4" />
+                Asks
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-xs text-gray-400 mt-2">
+                <div>Price</div>
+                <div>Amount</div>
+                <div>Total</div>
+              </div>
+            </div>
+            <div className="max-h-64 overflow-y-auto">
+              {orderBook.asks.map((ask, index) => (
+                <div key={index} className="relative p-2 hover:bg-red-500/5">
+                  <div
+                    className="absolute inset-0 bg-red-500/10"
+                    style={{ width: `${(ask.total / maxTotal) * 100}%` }}
+                  />
+                  <div className="relative grid grid-cols-3 gap-2 text-xs">
+                    <div className="text-red-400 font-mono">${ask.price.toFixed(2)}</div>
+                    <div className="text-white font-mono">{ask.amount.toFixed(4)}</div>
+                    <div className="text-gray-400 font-mono">${ask.total.toFixed(0)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>

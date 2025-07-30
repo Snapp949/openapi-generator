@@ -1,105 +1,123 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { Clock, Activity } from "lucide-react"
+import { History, ArrowUpRight, ArrowDownLeft } from "lucide-react"
 
-interface RecentTrade {
-  time: string
+interface Trade {
+  id: string
+  timestamp: number
   price: number
   amount: number
-  type: "buy" | "sell"
+  side: "buy" | "sell"
+  total: number
 }
 
-interface TradeHistoryProps {
-  trades: RecentTrade[]
-}
+export function TradeHistory() {
+  const [trades, setTrades] = useState<Trade[]>([])
+  const [loading, setLoading] = useState(true)
 
-export function TradeHistory({ trades }: TradeHistoryProps) {
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value)
+  useEffect(() => {
+    const generateTrade = (): Trade => {
+      const basePrice = 43250
+      const price = basePrice + (Math.random() - 0.5) * 100
+      const amount = Math.random() * 2 + 0.01
+      const side = Math.random() > 0.5 ? "buy" : "sell"
 
-  const formatAmount = (value: number) => value.toFixed(4)
+      return {
+        id: Math.random().toString(36).substr(2, 9),
+        timestamp: Date.now(),
+        price,
+        amount,
+        side,
+        total: price * amount,
+      }
+    }
 
-  // Calculate volume and trade statistics
-  const totalVolume = trades.reduce((sum, trade) => sum + trade.price * trade.amount, 0)
-  const buyTrades = trades.filter((t) => t.type === "buy").length
-  const sellTrades = trades.filter((t) => t.type === "sell").length
+    const initializeTrades = () => {
+      const initialTrades: Trade[] = []
+      for (let i = 0; i < 20; i++) {
+        const trade = generateTrade()
+        trade.timestamp = Date.now() - i * 30000 // 30 seconds apart
+        initialTrades.push(trade)
+      }
+      setTrades(initialTrades.reverse())
+      setLoading(false)
+    }
+
+    const addNewTrade = () => {
+      const newTrade = generateTrade()
+      setTrades((prev) => [newTrade, ...prev.slice(0, 19)]) // Keep last 20 trades
+    }
+
+    initializeTrades()
+    const interval = setInterval(addNewTrade, 3000) // New trade every 3 seconds
+
+    return () => clearInterval(interval)
+  }, [])
+
+  if (loading) {
+    return (
+      <Card className="bg-black/40 border-cyan-500/20">
+        <CardContent className="p-6">
+          <div className="animate-pulse space-y-2">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="h-4 bg-cyan-500/20 rounded"></div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-white flex items-center text-lg">
-            <Activity className="w-5 h-5 mr-2 text-green-400" />
-            Recent Trades
-          </CardTitle>
-          <div className="flex gap-2">
-            <Badge variant="outline" className="border-green-600/30 text-green-400 text-xs">
-              {buyTrades} Buys
-            </Badge>
-            <Badge variant="outline" className="border-red-600/30 text-red-400 text-xs">
-              {sellTrades} Sells
-            </Badge>
-          </div>
+    <Card className="bg-black/40 border-cyan-500/20 backdrop-blur-sm">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-cyan-400 flex items-center gap-2">
+          <History className="w-5 h-5" />
+          Recent Trades
+        </CardTitle>
+        <div className="grid grid-cols-4 gap-2 text-xs text-gray-400">
+          <div>Time</div>
+          <div>Price</div>
+          <div>Amount</div>
+          <div>Total</div>
         </div>
-        <div className="text-slate-400 text-sm">Volume: {formatCurrency(totalVolume)}</div>
       </CardHeader>
-      <CardContent className="text-sm">
-        {/* Header */}
-        <div className="grid grid-cols-3 text-slate-400 font-semibold mb-3 text-xs uppercase tracking-wider">
-          <span className="flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            Time
-          </span>
-          <span>Price (USD)</span>
-          <span className="text-right">Amount</span>
-        </div>
 
-        <Separator className="bg-slate-700 mb-3" />
-
-        {/* Trades List */}
-        <div className="space-y-1 max-h-64 overflow-y-auto">
-          {trades.slice(0, 15).map((trade, index) => (
+      <CardContent className="p-0">
+        <div className="max-h-64 overflow-y-auto">
+          {trades.map((trade) => (
             <div
-              key={`trade-${index}`}
-              className={`grid grid-cols-3 hover:bg-slate-700/30 px-2 py-1.5 rounded transition-colors ${
-                trade.type === "buy" ? "border-l-2 border-green-500/30" : "border-l-2 border-red-500/30"
-              }`}
+              key={trade.id}
+              className={`p-3 border-b border-cyan-500/10 hover:bg-${trade.side === "buy" ? "green" : "red"}-500/5 transition-colors`}
             >
-              <span className="text-slate-300 font-mono text-xs">{trade.time}</span>
-              <span className={`font-mono ${trade.type === "buy" ? "text-green-400" : "text-red-400"}`}>
-                {formatCurrency(trade.price)}
-              </span>
-              <span className="text-right text-slate-300 font-mono">{formatAmount(trade.amount)}</span>
+              <div className="grid grid-cols-4 gap-2 text-xs items-center">
+                <div className="text-gray-400">{new Date(trade.timestamp).toLocaleTimeString()}</div>
+                <div className={`font-mono ${trade.side === "buy" ? "text-green-400" : "text-red-400"}`}>
+                  ${trade.price.toFixed(2)}
+                </div>
+                <div className="text-white font-mono">{trade.amount.toFixed(4)}</div>
+                <div className="flex items-center gap-1">
+                  <span className="text-gray-300 font-mono">${trade.total.toFixed(0)}</span>
+                  {trade.side === "buy" ? (
+                    <ArrowUpRight className="w-3 h-3 text-green-400" />
+                  ) : (
+                    <ArrowDownLeft className="w-3 h-3 text-red-400" />
+                  )}
+                </div>
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Trade Summary */}
-        <Separator className="bg-slate-700 my-3" />
-        <div className="grid grid-cols-2 gap-4 text-xs">
-          <div className="text-center p-2 bg-green-500/10 rounded">
-            <div className="text-green-400 font-semibold">Avg Buy Price</div>
-            <div className="text-white">
-              {formatCurrency(
-                trades.filter((t) => t.type === "buy").reduce((sum, t, _, arr) => sum + t.price / arr.length, 0),
-              )}
-            </div>
-          </div>
-          <div className="text-center p-2 bg-red-500/10 rounded">
-            <div className="text-red-400 font-semibold">Avg Sell Price</div>
-            <div className="text-white">
-              {formatCurrency(
-                trades.filter((t) => t.type === "sell").reduce((sum, t, _, arr) => sum + t.price / arr.length, 0),
-              )}
-            </div>
+        <div className="p-3 border-t border-cyan-500/20 bg-black/20">
+          <div className="flex items-center justify-between text-xs">
+            <div className="text-gray-400">Live feed • Updates every 3s</div>
+            <Badge variant="outline" className="border-cyan-500/30 text-cyan-400">
+              {trades.length} trades
+            </Badge>
           </div>
         </div>
       </CardContent>

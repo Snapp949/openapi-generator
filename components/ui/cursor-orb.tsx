@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Sparkles, Star, Zap } from "lucide-react"
 import { motion } from "framer-motion"
-import { cn } from "@/lib/utils"
 
 interface CursorOrbProps {
   enabled?: boolean
@@ -13,81 +12,68 @@ interface TrailPoint {
   x: number
   y: number
   id: number
-  timestamp: number // Time when the point was created
+  timestamp: number
 }
 
 export function CursorOrb({ enabled = true }: CursorOrbProps) {
-  const [mainOrbPosition, setMainOrbPosition] = useState({ x: -100, y: -100 }) // Position for the main orb
+  const [mainOrbPosition, setMainOrbPosition] = useState({ x: -100, y: -100 })
   const [trailPoints, setTrailPoints] = useState<TrailPoint[]>([])
   const [isVisible, setIsVisible] = useState(false)
 
-  const mousePositionRef = useRef({ x: -100, y: -100 }) // Ref to store the latest mouse position
+  const mousePositionRef = useRef({ x: -100, y: -100 })
   const trailIdRef = useRef(0)
   const animationFrameIdRef = useRef<number | null>(null)
-  const lastTrailPointTimeRef = useRef(0) // To control how often new trail points are added
+  const lastTrailPointTimeRef = useRef(0)
 
-  // Function to update trail points (aging and removal)
+  // Memoized function to update trail points
   const animateTrail = useCallback(() => {
+    const now = Date.now()
     setTrailPoints((prevTrailPoints) => {
-      const now = Date.now()
-      const updatedTrail = prevTrailPoints
+      return prevTrailPoints
         .map((point) => ({
           ...point,
-          // Calculate age based on current time vs. creation time
-          // Max age of 1000ms (1 second) for a point
           age: (now - point.timestamp) / 1000,
         }))
-        .filter((point) => point.age < 1) // Remove points older than 1 second
-
-      return updatedTrail
+        .filter((point) => point.age < 1)
     })
 
     animationFrameIdRef.current = requestAnimationFrame(animateTrail)
-  }, []) // No dependencies, as it uses functional update for setTrailPoints
+  }, [])
 
-  // Mouse move handler
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
-      const newPosition = { x: e.clientX, y: e.clientY }
-      mousePositionRef.current = newPosition // Update ref for main orb and trail point creation
-      setMainOrbPosition(newPosition) // Update state for main orb animation
+  // Mouse move handler with proper dependencies
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    const newPosition = { x: e.clientX, y: e.clientY }
+    mousePositionRef.current = newPosition
+    setMainOrbPosition(newPosition)
+    setIsVisible(true)
 
-      setIsVisible(true)
-
-      const now = Date.now()
-      // Add a new trail point only if enough time has passed since the last one
-      // or if it's the very first point
-      if (now - lastTrailPointTimeRef.current > 50 || trailPoints.length === 0) {
-        setTrailPoints((prevTrailPoints) => {
-          const newTrailPoint: TrailPoint = {
-            x: newPosition.x,
-            y: newPosition.y,
-            id: trailIdRef.current++,
-            timestamp: now,
-          }
-          // Add new point to the beginning, keep trail length limited
-          return [newTrailPoint, ...prevTrailPoints].slice(0, 15) // Keep last 15 points
-        })
-        lastTrailPointTimeRef.current = now
-      }
-    },
-    [trailPoints.length],
-  ) // Dependency on trailPoints.length to ensure new points are added correctly
+    const now = Date.now()
+    if (now - lastTrailPointTimeRef.current > 50) {
+      setTrailPoints((prevTrailPoints) => {
+        const newTrailPoint: TrailPoint = {
+          x: newPosition.x,
+          y: newPosition.y,
+          id: trailIdRef.current++,
+          timestamp: now,
+        }
+        return [newTrailPoint, ...prevTrailPoints].slice(0, 15)
+      })
+      lastTrailPointTimeRef.current = now
+    }
+  }, [])
 
   const handleMouseLeave = useCallback(() => {
     setIsVisible(false)
-    // Stop animation frame when mouse leaves
     if (animationFrameIdRef.current) {
       cancelAnimationFrame(animationFrameIdRef.current)
       animationFrameIdRef.current = null
     }
     setTrailPoints([])
-    setMainOrbPosition({ x: -100, y: -100 }) // Move main orb off-screen
+    setMainOrbPosition({ x: -100, y: -100 })
   }, [])
 
   const handleMouseEnter = useCallback(() => {
     setIsVisible(true)
-    // Restart animation frame when mouse enters
     if (!animationFrameIdRef.current) {
       animationFrameIdRef.current = requestAnimationFrame(animateTrail)
     }
@@ -109,7 +95,6 @@ export function CursorOrb({ enabled = true }: CursorOrbProps) {
     document.addEventListener("mouseleave", handleMouseLeave)
     document.addEventListener("mouseenter", handleMouseEnter)
 
-    // Start the trail animation loop
     animationFrameIdRef.current = requestAnimationFrame(animateTrail)
 
     return () => {
@@ -125,11 +110,13 @@ export function CursorOrb({ enabled = true }: CursorOrbProps) {
   if (!enabled || !isVisible) return null
 
   return (
-    <div className={cn("fixed inset-0 pointer-events-none z-[10000]", "")}>
+    <div className="fixed inset-0 pointer-events-none z-[10000]">
       {/* Trail Points */}
       {trailPoints.map((point) => {
-        const opacity = Math.max(0, 1 - point.age) // 1 (new) to 0 (old)
-        const scale = Math.max(0.1, 1 - point.age) // 1 (new) to 0.1 (old)
+        const now = Date.now()
+        const age = (now - point.timestamp) / 1000
+        const opacity = Math.max(0, 1 - age)
+        const scale = Math.max(0.1, 1 - age)
 
         return (
           <motion.div
@@ -172,21 +159,7 @@ export function CursorOrb({ enabled = true }: CursorOrbProps) {
             repeat: Number.POSITIVE_INFINITY,
             ease: "easeInOut",
           }}
-          className="absolute inset-0 w-8 h-8 rounded-full bg-gradient-to-r from-cyan-400/30 to-blue-500/30 blur-md animate-pulse"
-        />
-
-        {/* Rotating Ring */}
-        <motion.div
-          animate={{
-            rotate: 360,
-          }}
-          transition={{
-            duration: 8,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "linear",
-          }}
-          className="absolute inset-1 w-6 h-6 rounded-full border border-cyan-400/50 animate-spin"
-          style={{ animationDuration: "3s" }}
+          className="absolute inset-0 w-8 h-8 rounded-full bg-gradient-to-r from-cyan-400/30 to-blue-500/30 blur-md"
         />
 
         {/* Core Orb */}
@@ -199,29 +172,38 @@ export function CursorOrb({ enabled = true }: CursorOrbProps) {
             repeat: Number.POSITIVE_INFINITY,
             ease: "easeInOut",
           }}
-          className="absolute inset-2 w-4 h-4 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 animate-pulse shadow-lg shadow-cyan-500/50"
+          className="absolute inset-2 w-4 h-4 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 shadow-lg shadow-cyan-500/50"
         >
-          <motion.div className="absolute inset-0.5 bg-gradient-to-r from-white/20 to-transparent rounded-full" />
+          <div className="absolute inset-0.5 bg-gradient-to-r from-white/20 to-transparent rounded-full" />
         </motion.div>
 
         {/* Orbiting Icons */}
-        <motion.div className="absolute inset-0 animate-spin" style={{ animationDuration: "3s" }}>
-          <motion.div className="absolute w-3 h-3 text-cyan-300 -top-1 left-1/2 transform -translate-x-1/2">
-            <Sparkles />
-          </motion.div>
+        <motion.div
+          className="absolute inset-0"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+        >
+          <div className="absolute w-3 h-3 text-cyan-300 -top-1 left-1/2 transform -translate-x-1/2">
+            <Sparkles size={12} />
+          </div>
         </motion.div>
         <motion.div
-          className="absolute inset-0 animate-spin"
-          style={{ animationDuration: "4s", animationDirection: "reverse" }}
+          className="absolute inset-0"
+          animate={{ rotate: -360 }}
+          transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
         >
-          <motion.div className="absolute w-3 h-3 text-blue-300 top-1/2 -right-1 transform -translate-y-1/2">
-            <Star />
-          </motion.div>
+          <div className="absolute w-3 h-3 text-blue-300 top-1/2 -right-1 transform -translate-y-1/2">
+            <Star size={12} />
+          </div>
         </motion.div>
-        <motion.div className="absolute inset-0 animate-spin" style={{ animationDuration: "5s" }}>
-          <motion.div className="absolute w-3 h-3 text-purple-300 -bottom-1 left-1/2 transform -translate-x-1/2">
-            <Zap />
-          </motion.div>
+        <motion.div
+          className="absolute inset-0"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 5, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+        >
+          <div className="absolute w-3 h-3 text-purple-300 -bottom-1 left-1/2 transform -translate-x-1/2">
+            <Zap size={12} />
+          </div>
         </motion.div>
       </motion.div>
     </div>
