@@ -24,13 +24,14 @@ import {
   Lightbulb,
   Network,
   Bot,
+  AlertCircle,
 } from "lucide-react"
 import { HolographicHeader } from "@/components/snap-dax/holographic-header"
-import { useDaxMarketData } from "@/hooks/use-dax-market-data" // Import the new hook
-import { MarketChart } from "@/components/snap-dax/market-chart" // Import the new chart component
-import { OrderBook } from "@/components/snap-dax/order-book" // Import order book
-import { TradeHistory } from "@/components/snap-dax/trade-history" // Import trade history
-import { AiTradingBots } from "@/components/snap-dax/ai-trading-bots" // Import AI bots component
+import { useDaxMarketData } from "@/hooks/use-dax-market-data"
+import { MarketChart } from "@/components/snap-dax/market-chart"
+import { OrderBook } from "@/components/snap-dax/order-book"
+import { TradeHistory } from "@/components/snap-dax/trade-history"
+import { AiTradingBots } from "@/components/snap-dax/ai-trading-bots"
 
 const mockPortfolioData = [
   {
@@ -89,7 +90,7 @@ const mockNews = [
 
 export function DaxDashboard() {
   const [activeTab, setActiveTab] = useState("overview")
-  const { data, loading, error, refetch } = useDaxMarketData() // Use the new hook
+  const { data, loading, error, refetch } = useDaxMarketData()
 
   const totalPortfolioValue = mockPortfolioData.reduce((sum, item) => sum + item.value, 0)
   const totalDailyPnL = mockPortfolioData.reduce((sum, item) => sum + item.pnl, 0)
@@ -101,14 +102,27 @@ export function DaxDashboard() {
 
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
-        Loading DAX Dashboard...
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-gray-900 to-slate-950 text-white">
+        <div className="text-center space-y-4">
+          <RefreshCw className="w-12 h-12 animate-spin text-blue-400 mx-auto" />
+          <h2 className="text-2xl font-bold">Loading DAX Dashboard...</h2>
+          <p className="text-slate-400">Fetching real-time market data</p>
+        </div>
       </div>
     )
+
   if (error)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-red-400">
-        Error loading data: {error}
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-gray-900 to-slate-950 text-white">
+        <div className="text-center space-y-4">
+          <AlertCircle className="w-12 h-12 text-red-400 mx-auto" />
+          <h2 className="text-2xl font-bold text-red-400">Error Loading Data</h2>
+          <p className="text-slate-400">{error}</p>
+          <Button onClick={refetch} className="bg-blue-600 hover:bg-blue-700">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        </div>
       </div>
     )
 
@@ -188,8 +202,6 @@ export function DaxDashboard() {
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5 bg-slate-800/50 border-slate-700">
-            {" "}
-            {/* Changed to 5 columns */}
             <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600">
               <Globe className="w-4 h-4 mr-2" />
               Overview
@@ -207,8 +219,6 @@ export function DaxDashboard() {
               Portfolio
             </TabsTrigger>
             <TabsTrigger value="ai-bots" className="data-[state=active]:bg-cyan-600">
-              {" "}
-              {/* New AI Bots tab */}
               <Bot className="w-4 h-4 mr-2" />
               AI Bots
             </TabsTrigger>
@@ -237,20 +247,20 @@ export function DaxDashboard() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {mockNews.map((item, index) => (
-                    <div key={index} className="p-3 bg-slate-900/70 rounded-lg">
+                    <div key={index} className="p-3 bg-slate-900/70 rounded-lg hover:bg-slate-900/90 transition-colors">
                       <h3 className="font-semibold text-white text-sm mb-1">{item.title}</h3>
-                      <p className="text-slate-400 text-xs mb-1">
+                      <p className="text-slate-400 text-xs mb-2">
                         {item.source} • {item.time}
                       </p>
                       <Badge
                         className={`${
                           item.impact === "Bullish"
-                            ? "bg-green-600/20 text-green-400"
+                            ? "bg-green-600/20 text-green-400 border-green-600/30"
                             : item.impact === "Positive"
-                              ? "bg-blue-600/20 text-blue-400"
+                              ? "bg-blue-600/20 text-blue-400 border-blue-600/30"
                               : item.impact === "Neutral"
-                                ? "bg-gray-600/20 text-gray-400"
-                                : "bg-red-600/20 text-red-400"
+                                ? "bg-gray-600/20 text-gray-400 border-gray-600/30"
+                                : "bg-red-600/20 text-red-400 border-red-600/30"
                         } text-xs`}
                       >
                         {item.impact}
@@ -287,7 +297,7 @@ export function DaxDashboard() {
                   {data?.currentMarketData.map((crypto) => (
                     <div
                       key={crypto.symbol}
-                      className="flex flex-col p-4 bg-slate-900/70 rounded-lg border border-slate-700 hover:border-blue-500/50 transition-all"
+                      className="flex flex-col p-4 bg-slate-900/70 rounded-lg border border-slate-700 hover:border-blue-500/50 transition-all cursor-pointer"
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-3">
@@ -301,7 +311,9 @@ export function DaxDashboard() {
                         </div>
                         <Badge
                           className={`${
-                            crypto.change >= 0 ? "bg-green-600/20 text-green-400" : "bg-red-600/20 text-red-400"
+                            crypto.change >= 0
+                              ? "bg-green-600/20 text-green-400 border-green-600/30"
+                              : "bg-red-600/20 text-red-400 border-red-600/30"
                           } text-xs`}
                         >
                           {crypto.change >= 0 ? "+" : ""}
@@ -309,11 +321,11 @@ export function DaxDashboard() {
                         </Badge>
                       </div>
                       <div className="text-3xl font-bold text-white mb-2">{formatCurrency(crypto.price)}</div>
-                      <div className="flex justify-between text-slate-400 text-sm">
+                      <div className="flex justify-between text-slate-400 text-sm mb-4">
                         <span>Vol: {crypto.volume}</span>
                         <span>MCap: {crypto.marketCap}</span>
                       </div>
-                      <div className="flex gap-2 mt-4">
+                      <div className="flex gap-2 mt-auto">
                         <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
                           Buy
                         </Button>
@@ -331,8 +343,6 @@ export function DaxDashboard() {
           {/* Trading Tab Content */}
           <TabsContent value="trading" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {" "}
-              {/* Changed to 3 columns */}
               <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
                 <CardHeader>
                   <CardTitle className="text-green-400 flex items-center">
@@ -386,6 +396,7 @@ export function DaxDashboard() {
                   </Button>
                 </CardContent>
               </Card>
+
               <Card className="bg-slate-800/50 border-slate-700 backdrop-blur-sm">
                 <CardHeader>
                   <CardTitle className="text-red-400 flex items-center">
@@ -406,7 +417,7 @@ export function DaxDashboard() {
                       <SelectContent className="bg-slate-900 border-slate-700 text-white">
                         {mockPortfolioData.map((asset) => (
                           <SelectItem key={asset.symbol} value={asset.symbol}>
-                            {asset.name} ({asset.symbol})
+                            {asset.asset} ({asset.symbol})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -431,7 +442,7 @@ export function DaxDashboard() {
                       id="sell-price"
                       type="number"
                       placeholder="Market Price"
-                      className="w-full mt-1 p-2 bg-slate-900/70 border-slate-700 text-white"
+                      className="bg-slate-900/70 border-slate-700 text-white"
                     />
                   </div>
                   <Button className="w-full bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white">
@@ -439,9 +450,8 @@ export function DaxDashboard() {
                   </Button>
                 </CardContent>
               </Card>
+
               <div className="space-y-6">
-                {" "}
-                {/* New column for Order Book and Trade History */}
                 {data?.orderBook && <OrderBook bids={data.orderBook.bids} asks={data.orderBook.asks} />}
                 {data?.recentTrades && <TradeHistory trades={data.recentTrades} />}
               </div>
@@ -473,9 +483,8 @@ export function DaxDashboard() {
                   </div>
                   <div className="bg-slate-900/70 p-4 rounded-lg">
                     <h4 className="text-purple-300 font-semibold mb-1">Portfolio Allocation</h4>
-                    {/* Placeholder for a pie chart */}
                     <div className="h-24 bg-slate-900 rounded-lg flex items-center justify-center text-slate-500 text-sm">
-                      [Allocation Chart]
+                      [Allocation Chart Placeholder]
                     </div>
                   </div>
                 </div>
@@ -484,14 +493,14 @@ export function DaxDashboard() {
                   {mockPortfolioData.map((position) => (
                     <div
                       key={position.symbol}
-                      className="flex items-center justify-between p-4 rounded-lg bg-slate-900/70 border border-slate-700"
+                      className="flex items-center justify-between p-4 rounded-lg bg-slate-900/70 border border-slate-700 hover:border-slate-600 transition-colors"
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
                           <span className="text-sm font-bold text-white">{position.symbol.slice(0, 2)}</span>
                         </div>
                         <div>
-                          <div className="font-semibold text-white">{position.name}</div>
+                          <div className="font-semibold text-white">{position.asset}</div>
                           <div className="text-sm text-slate-400">
                             {position.quantity.toFixed(4)} {position.symbol}
                           </div>
@@ -531,7 +540,7 @@ export function DaxDashboard() {
             </Card>
           </TabsContent>
 
-          {/* New AI Bots Tab Content */}
+          {/* AI Bots Tab Content */}
           <TabsContent value="ai-bots" className="space-y-6">
             <AiTradingBots />
           </TabsContent>

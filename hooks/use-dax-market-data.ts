@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 
-interface MarketData {
+interface MarketDataPoint {
   symbol: string
   name: string
   price: number
@@ -16,7 +16,6 @@ interface HistoricalDataPoint {
   BTC: number
   ETH: number
   SOL: number
-  [key: string]: string | number // For dynamic access
 }
 
 interface OrderBookEntry {
@@ -38,10 +37,11 @@ interface RecentTrade {
 }
 
 interface DaxMarketData {
+  currentMarketData: MarketDataPoint[]
   historicalData: HistoricalDataPoint[]
-  currentMarketData: MarketData[]
   orderBook: OrderBook
   recentTrades: RecentTrade[]
+  timestamp: string
 }
 
 export function useDaxMarketData() {
@@ -50,27 +50,42 @@ export function useDaxMarketData() {
   const [error, setError] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
-    setLoading(true)
-    setError(null)
     try {
+      setError(null)
       const response = await fetch("/api/dax/market-data")
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
-      const result: DaxMarketData = await response.json()
-      setData(result)
-    } catch (e: any) {
-      setError(e.message)
+
+      const marketData: DaxMarketData = await response.json()
+      setData(marketData)
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch market data")
+      console.error("Error fetching market data:", err)
     } finally {
       setLoading(false)
     }
   }, [])
 
+  const refetch = useCallback(() => {
+    setLoading(true)
+    fetchData()
+  }, [fetchData])
+
   useEffect(() => {
     fetchData()
-    const interval = setInterval(fetchData, 15000) // Refresh every 15 seconds
+
+    // Set up polling for real-time updates every 5 seconds
+    const interval = setInterval(fetchData, 5000)
+
     return () => clearInterval(interval)
   }, [fetchData])
 
-  return { data, loading, error, refetch: fetchData }
+  return {
+    data,
+    loading,
+    error,
+    refetch,
+  }
 }

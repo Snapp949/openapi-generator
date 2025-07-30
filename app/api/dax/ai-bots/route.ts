@@ -1,64 +1,89 @@
 import { NextResponse } from "next/server"
 
-interface AiBot {
-  id: string
-  name: string
-  strategy: string
-  status: "active" | "inactive" | "error"
-  performance: number // % gain/loss
-  lastRun: string
-}
-
-const mockAiBots: AiBot[] = [
+// Mock AI bot data
+const mockBots = [
   {
-    id: "bot-1",
+    id: "bot-001",
+    name: "Momentum Trader",
+    strategy: "Technical Analysis + Momentum",
+    status: "active" as const,
+    performance: 12.5,
+    lastRun: "2 minutes ago",
+  },
+  {
+    id: "bot-002",
     name: "Arbitrage Hunter",
-    strategy: "Cross-exchange arbitrage",
-    status: "active",
+    strategy: "Cross-Exchange Arbitrage",
+    status: "active" as const,
+    performance: 8.3,
+    lastRun: "1 minute ago",
+  },
+  {
+    id: "bot-003",
+    name: "DeFi Yield Optimizer",
+    strategy: "Yield Farming + Liquidity Mining",
+    status: "inactive" as const,
+    performance: -2.1,
+    lastRun: "1 hour ago",
+  },
+  {
+    id: "bot-004",
+    name: "Market Maker Pro",
+    strategy: "Grid Trading + Market Making",
+    status: "active" as const,
+    performance: 15.7,
+    lastRun: "30 seconds ago",
+  },
+  {
+    id: "bot-005",
+    name: "Sentiment Analyzer",
+    strategy: "AI Sentiment + News Analysis",
+    status: "error" as const,
     performance: 5.2,
-    lastRun: "2024-07-25 10:30 AM",
-  },
-  {
-    id: "bot-2",
-    name: "Trend Follower Pro",
-    strategy: "Moving average crossover",
-    status: "inactive",
-    performance: -1.5,
-    lastRun: "2024-07-24 05:00 PM",
-  },
-  {
-    id: "bot-3",
-    name: "Liquidity Provider",
-    strategy: "Automated market making",
-    status: "active",
-    performance: 8.1,
-    lastRun: "2024-07-25 11:00 AM",
+    lastRun: "5 minutes ago",
   },
 ]
 
 export async function GET() {
-  await new Promise((resolve) => setTimeout(resolve, 300)) // Simulate network delay
-  return NextResponse.json(mockAiBots)
+  try {
+    // Simulate some randomness in performance
+    const botsWithUpdatedPerformance = mockBots.map((bot) => ({
+      ...bot,
+      performance: bot.performance + (Math.random() - 0.5) * 2, // Small random variation
+    }))
+
+    return NextResponse.json(botsWithUpdatedPerformance)
+  } catch (error) {
+    console.error("Error fetching AI bots:", error)
+    return NextResponse.json({ error: "Failed to fetch AI bots" }, { status: 500 })
+  }
 }
 
-export async function POST(req: Request) {
-  await new Promise((resolve) => setTimeout(resolve, 300)) // Simulate network delay
-  const { action, botId } = await req.json()
+export async function POST(request: Request) {
+  try {
+    const { botId, action } = await request.json()
 
-  const botIndex = mockAiBots.findIndex((bot) => bot.id === botId)
+    if (!botId || !action) {
+      return NextResponse.json({ error: "Missing botId or action" }, { status: 400 })
+    }
 
-  if (botIndex === -1) {
-    return NextResponse.json({ message: "Bot not found" }, { status: 404 })
+    // Simulate bot action processing
+    console.log(`Processing ${action} action for bot ${botId}`)
+
+    // In a real application, this would update the bot status in a database
+    const updatedBot = mockBots.find((bot) => bot.id === botId)
+    if (updatedBot) {
+      updatedBot.status = action === "start" ? "active" : "inactive"
+      updatedBot.lastRun = "just now"
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Bot ${action} action completed successfully`,
+      botId,
+    })
+  } catch (error) {
+    console.error("Error processing bot action:", error)
+    return NextResponse.json({ error: "Failed to process bot action" }, { status: 500 })
   }
-
-  if (action === "start") {
-    mockAiBots[botIndex].status = "active"
-    mockAiBots[botIndex].lastRun = new Date().toLocaleString()
-  } else if (action === "stop") {
-    mockAiBots[botIndex].status = "inactive"
-  } else {
-    return NextResponse.json({ message: "Invalid action" }, { status: 400 })
-  }
-
-  return NextResponse.json(mockAiBots[botIndex])
 }
