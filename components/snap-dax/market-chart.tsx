@@ -58,16 +58,6 @@ export function MarketChart({ data, title, description }: MarketChartProps) {
     return `$${value.toFixed(value < 1 ? 4 : 0)}`
   }
 
-  const formatTooltipValue = (value: number, name: string) => {
-    return [
-      `$${value.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`,
-      name,
-    ]
-  }
-
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
