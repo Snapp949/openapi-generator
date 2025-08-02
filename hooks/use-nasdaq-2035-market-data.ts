@@ -55,7 +55,7 @@ interface UseNasdaq2035MarketDataReturn {
   latency: number
 }
 
-export function useNasdaq2035MarketData(symbol = "DAX", updateInterval = 1000): UseNasdaq2035MarketDataReturn {
+export function useNasdaq2035MarketData(symbol = "DAX", updateInterval = 500): UseNasdaq2035MarketDataReturn {
   const [data, setData] = useState<Nasdaq2035MarketData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -63,66 +63,73 @@ export function useNasdaq2035MarketData(symbol = "DAX", updateInterval = 1000): 
   const [connectionStatus, setConnectionStatus] = useState<"connected" | "connecting" | "disconnected">("connecting")
   const [latency, setLatency] = useState(0)
 
-  // Generate realistic market data
+  // Generate realistic market data with enhanced volatility patterns
   const generateMarketData = useCallback((): Nasdaq2035MarketData => {
     const now = Date.now()
-    const basePrice = 17234.56
+    const basePrice = symbol === "DAX" ? 17234.56 : symbol === "MDAX" ? 26789.12 : 13456.78
 
-    // Generate 24 hours of minute data
+    // Generate intraday data (390 minutes of trading)
     const chartData: MarketDataPoint[] = []
     let currentPrice = basePrice
 
-    for (let i = 1440; i >= 0; i--) {
+    for (let i = 390; i >= 0; i--) {
       const timestamp = now - i * 60 * 1000
-      const volatility = 0.002 // 0.2% volatility per minute
-      const change = (Math.random() - 0.5) * 2 * volatility
+      const hour = new Date(timestamp).getHours()
 
+      // Market volatility patterns - higher at open/close
+      let volatility = 0.0008 // Base volatility
+      if (hour === 9 || hour === 15) volatility *= 2.5 // Opening/closing volatility
+      if (hour >= 11 && hour <= 14) volatility *= 0.7 // Lunch lull
+
+      const change = (Math.random() - 0.5) * 2 * volatility
       const open = currentPrice
       const close = currentPrice * (1 + change)
-      const high = Math.max(open, close) * (1 + Math.random() * 0.001)
-      const low = Math.min(open, close) * (1 - Math.random() * 0.001)
-      const volume = Math.floor(Math.random() * 1000000 + 500000)
+      const high = Math.max(open, close) * (1 + Math.random() * 0.0003)
+      const low = Math.min(open, close) * (1 - Math.random() * 0.0003)
+      const volume = Math.floor(Math.random() * 2000000 + 500000)
 
       chartData.push({
         timestamp,
-        open,
-        high,
-        low,
-        close,
+        open: Number(open.toFixed(2)),
+        high: Number(high.toFixed(2)),
+        low: Number(low.toFixed(2)),
+        close: Number(close.toFixed(2)),
         volume,
       })
 
       currentPrice = close
     }
 
-    // Generate order book with 20 levels each side
+    // Generate realistic order book with 25 levels each side
     const bids: OrderBookEntry[] = []
     const asks: OrderBookEntry[] = []
     const midPrice = currentPrice
 
-    for (let i = 0; i < 20; i++) {
-      // Bids (buy orders) below current price
-      const bidPrice = midPrice - (i + 1) * (0.01 + Math.random() * 0.05)
+    for (let i = 0; i < 25; i++) {
+      // Bids - exponentially decreasing size as we go deeper
+      const bidPrice = midPrice - (i + 1) * (0.01 + Math.random() * 0.02)
+      const bidSize = Math.floor((Math.random() * 8000 + 2000) * Math.exp(-i * 0.1))
       bids.push({
         price: Number(bidPrice.toFixed(2)),
-        size: Math.floor(Math.random() * 10000 + 1000),
-        orders: Math.floor(Math.random() * 50 + 5),
+        size: bidSize,
+        orders: Math.floor(Math.random() * 25 + 5),
         timestamp: now,
       })
 
-      // Asks (sell orders) above current price
-      const askPrice = midPrice + (i + 1) * (0.01 + Math.random() * 0.05)
+      // Asks - similar pattern
+      const askPrice = midPrice + (i + 1) * (0.01 + Math.random() * 0.02)
+      const askSize = Math.floor((Math.random() * 8000 + 2000) * Math.exp(-i * 0.1))
       asks.push({
         price: Number(askPrice.toFixed(2)),
-        size: Math.floor(Math.random() * 10000 + 1000),
-        orders: Math.floor(Math.random() * 50 + 5),
+        size: askSize,
+        orders: Math.floor(Math.random() * 25 + 5),
         timestamp: now,
       })
     }
 
     const spread = asks[0].price - bids[0].price
 
-    // Generate top movers
+    // Generate dynamic top movers
     const topMovers: TopMover[] = [
       { symbol: "SAP", name: "SAP SE", price: 134.56, change: 8.92, changePercent: 7.1, volume: 2500000 },
       { symbol: "ASML", name: "ASML Holding", price: 678.9, change: -23.45, changePercent: -3.3, volume: 1800000 },
@@ -130,12 +137,14 @@ export function useNasdaq2035MarketData(symbol = "DAX", updateInterval = 1000): 
       { symbol: "DTE", name: "Deutsche Telekom", price: 23.45, change: -1.23, changePercent: -5.0, volume: 4100000 },
       { symbol: "ALV", name: "Allianz SE", price: 245.67, change: 15.89, changePercent: 6.9, volume: 1900000 },
       { symbol: "BAS", name: "BASF SE", price: 45.23, change: -2.34, changePercent: -4.9, volume: 2800000 },
+      { symbol: "BMW", name: "BMW AG", price: 89.45, change: 4.56, changePercent: 5.4, volume: 2100000 },
+      { symbol: "MRK", name: "Merck KGaA", price: 167.89, change: -8.12, changePercent: -4.6, volume: 1600000 },
     ].map((mover) => ({
       ...mover,
-      price: mover.price * (1 + (Math.random() - 0.5) * 0.02),
-      change: mover.change + (Math.random() - 0.5) * 2,
-      changePercent: mover.changePercent + (Math.random() - 0.5) * 1,
-      volume: mover.volume + Math.floor((Math.random() - 0.5) * 500000),
+      price: mover.price * (1 + (Math.random() - 0.5) * 0.01),
+      change: mover.change + (Math.random() - 0.5) * 1.5,
+      changePercent: mover.changePercent + (Math.random() - 0.5) * 0.8,
+      volume: mover.volume + Math.floor((Math.random() - 0.5) * 300000),
     }))
 
     const dayChange = currentPrice - basePrice
@@ -154,10 +163,10 @@ export function useNasdaq2035MarketData(symbol = "DAX", updateInterval = 1000): 
       dayChange,
       dayChangePercent,
       volume: chartData.reduce((sum, point) => sum + point.volume, 0),
-      marketCap: currentPrice * 1000000000, // Simplified market cap calculation
+      marketCap: currentPrice * 1000000000,
       timestamp: now,
     }
-  }, [])
+  }, [symbol])
 
   const fetchData = useCallback(async () => {
     const startTime = Date.now()
@@ -166,8 +175,9 @@ export function useNasdaq2035MarketData(symbol = "DAX", updateInterval = 1000): 
       setConnectionStatus("connecting")
       setError(null)
 
-      // Simulate network latency
-      await new Promise((resolve) => setTimeout(resolve, Math.random() * 50 + 10))
+      // Simulate realistic network latency (10-100ms)
+      const networkLatency = Math.random() * 90 + 10
+      await new Promise((resolve) => setTimeout(resolve, networkLatency))
 
       const marketData = generateMarketData()
       setData(marketData)
@@ -175,7 +185,7 @@ export function useNasdaq2035MarketData(symbol = "DAX", updateInterval = 1000): 
       setConnectionStatus("connected")
 
       const endTime = Date.now()
-      setLatency(endTime - startTime)
+      setLatency(Math.round(endTime - startTime))
     } catch (err: any) {
       setError(err.message || "Failed to fetch market data")
       setConnectionStatus("disconnected")
@@ -185,7 +195,7 @@ export function useNasdaq2035MarketData(symbol = "DAX", updateInterval = 1000): 
     }
   }, [generateMarketData])
 
-  // Real-time updates with WebSocket simulation
+  // Ultra-fast real-time updates
   useEffect(() => {
     fetchData()
 
@@ -198,17 +208,29 @@ export function useNasdaq2035MarketData(symbol = "DAX", updateInterval = 1000): 
     return () => clearInterval(interval)
   }, [fetchData, updateInterval, connectionStatus])
 
-  // Simulate connection recovery
+  // Connection recovery mechanism
   useEffect(() => {
     if (connectionStatus === "disconnected") {
       const reconnectTimer = setTimeout(() => {
         setConnectionStatus("connecting")
         fetchData()
-      }, 5000)
+      }, 3000)
 
       return () => clearTimeout(reconnectTimer)
     }
   }, [connectionStatus, fetchData])
+
+  // Simulate occasional connection issues for realism
+  useEffect(() => {
+    const connectionIssueTimer = setInterval(() => {
+      if (Math.random() < 0.001 && connectionStatus === "connected") {
+        // 0.1% chance
+        setConnectionStatus("disconnected")
+      }
+    }, 1000)
+
+    return () => clearInterval(connectionIssueTimer)
+  }, [connectionStatus])
 
   return {
     data,
