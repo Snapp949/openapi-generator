@@ -225,7 +225,7 @@ export function Nasdaq2035NewsFeed({ eliteMode }: NewsFeedProps) {
               placeholder="Search news, symbols, or keywords..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-slate-800/50 border-slate-700/50 text-white placeholder-slate-400"
+              className="pl-9 bg-slate-800/50 border-slate-700/50 text-white placeholder-slate-400 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/25"
             />
           </div>
 
