@@ -25,22 +25,7 @@ export function CursorOrb({ enabled = true }: CursorOrbProps) {
   const animationFrameIdRef = useRef<number | null>(null)
   const lastTrailPointTimeRef = useRef(0)
 
-  // Memoized function to update trail points
-  const animateTrail = useCallback(() => {
-    const now = Date.now()
-    setTrailPoints((prevTrailPoints) => {
-      return prevTrailPoints
-        .map((point) => ({
-          ...point,
-          age: (now - point.timestamp) / 1000,
-        }))
-        .filter((point) => point.age < 1)
-    })
-
-    animationFrameIdRef.current = requestAnimationFrame(animateTrail)
-  }, [])
-
-  // Mouse move handler with proper dependencies
+  // Mouse move handler
   const handleMouseMove = useCallback((e: MouseEvent) => {
     const newPosition = { x: e.clientX, y: e.clientY }
     mousePositionRef.current = newPosition
@@ -74,18 +59,34 @@ export function CursorOrb({ enabled = true }: CursorOrbProps) {
 
   const handleMouseEnter = useCallback(() => {
     setIsVisible(true)
-    if (!animationFrameIdRef.current) {
+  }, [])
+
+  // Animation loop for trail cleanup
+  useEffect(() => {
+    if (!enabled || !isVisible) return
+
+    const animateTrail = () => {
+      const now = Date.now()
+      setTrailPoints((prevTrailPoints) => {
+        return prevTrailPoints.filter((point) => now - point.timestamp < 1000)
+      })
       animationFrameIdRef.current = requestAnimationFrame(animateTrail)
     }
-  }, [animateTrail])
 
-  useEffect(() => {
-    if (!enabled) {
-      setIsVisible(false)
+    animationFrameIdRef.current = requestAnimationFrame(animateTrail)
+
+    return () => {
       if (animationFrameIdRef.current) {
         cancelAnimationFrame(animationFrameIdRef.current)
         animationFrameIdRef.current = null
       }
+    }
+  }, [enabled, isVisible])
+
+  // Event listeners setup
+  useEffect(() => {
+    if (!enabled) {
+      setIsVisible(false)
       setTrailPoints([])
       setMainOrbPosition({ x: -100, y: -100 })
       return
@@ -95,8 +96,6 @@ export function CursorOrb({ enabled = true }: CursorOrbProps) {
     document.addEventListener("mouseleave", handleMouseLeave)
     document.addEventListener("mouseenter", handleMouseEnter)
 
-    animationFrameIdRef.current = requestAnimationFrame(animateTrail)
-
     return () => {
       document.removeEventListener("mousemove", handleMouseMove)
       document.removeEventListener("mouseleave", handleMouseLeave)
@@ -105,7 +104,7 @@ export function CursorOrb({ enabled = true }: CursorOrbProps) {
         cancelAnimationFrame(animationFrameIdRef.current)
       }
     }
-  }, [enabled, handleMouseMove, handleMouseLeave, handleMouseEnter, animateTrail])
+  }, [enabled, handleMouseMove, handleMouseLeave, handleMouseEnter])
 
   if (!enabled || !isVisible) return null
 
