@@ -6,24 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  TrendingUp,
-  DollarSign,
-  CreditCard,
-  PieChart,
-  BarChart3,
-  Activity,
-  Zap,
-  Target,
-  ArrowUpRight,
-  ArrowDownRight,
-  Settings,
-  Download,
-  RefreshCw,
-  Shield,
-  Building,
-  Home,
-} from "lucide-react"
+import { TrendingUp, DollarSign, CreditCard, PieChart, BarChart3, Activity, Zap, Target, ArrowUpRight, ArrowDownRight, Settings, Download, RefreshCw, Shield, Building, Home } from 'lucide-react'
 import { useEcosystem } from "@/contexts/ecosystem-context"
 import { motion } from "framer-motion"
 
@@ -62,7 +45,7 @@ export default function DashboardPage() {
     }, 1000)
 
     return () => clearTimeout(timer)
-  }, []) // Empty dependency array to run only once
+  }, [trackPageView]) // Added trackPageView to dependencies
 
   // Load dashboard data
   useEffect(() => {

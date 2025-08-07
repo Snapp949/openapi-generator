@@ -1,13 +1,19 @@
 "use client"
+
 import { CreditSuiteDashboard } from "./CreditSuiteDashboard"
-import { CreditProvider } from "@/contexts/credit-context"
+import { useEffect } from "react"
+import { useEcosystem } from "@/contexts/ecosystem-context"
 
 export default function CreditSuitePage() {
+  const { trackPageView } = useEcosystem()
+
+  useEffect(() => {
+    trackPageView("/credit-suite", "Credit Suite Dashboard")
+  }, [trackPageView])
+
   return (
-    <CreditProvider>
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-background/90">
-        <CreditSuiteDashboard />
-      </div>
-    </CreditProvider>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      <CreditSuiteDashboard />
+    </div>
   )
 }
