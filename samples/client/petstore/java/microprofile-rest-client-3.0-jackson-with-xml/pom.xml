@@ -4,7 +4,7 @@
   <artifactId>microprofile-rest-client-3-jackson-with-xml</artifactId>
   <packaging>jar</packaging>
   <name>microprofile-rest-client-3-jackson-with-xml</name>
-  <description>This is a sample server Petstore server. For this sample, you can use the api key &#x60;special-key&#x60; to test the authorization filters.</description>
+  <description>This is a sample server Petstore server. For this sample, you can use the api key `special-key` to test the authorization filters.</description>
   <version>1.0.0</version>
   <build>
     <sourceDirectory>src/main/java</sourceDirectory>
@@ -170,7 +170,7 @@
     <microprofile.rest.client.api.version>3.0</microprofile.rest.client.api.version>
     <jersey.mp.rest.client.version>3.0.4</jersey.mp.rest.client.version>
     <geronimo.config.impl.version>1.2.3</geronimo.config.impl.version>
-    <cxf.rt.rs.extension.providers.version>3.5.1</cxf.rt.rs.extension.providers.version>
+    <cxf.rt.rs.extension.providers.version>3.5.11</cxf.rt.rs.extension.providers.version>
     <jaxb.core.version>3.0.2</jaxb.core.version>
     <jaxb.impl.version>3.0.2</jaxb.impl.version>
     <hibernate.validator.version>7.0.4.Final</hibernate.validator.version>
